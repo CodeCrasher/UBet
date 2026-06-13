@@ -15,13 +15,16 @@ const roomCode = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 6);
 
 // ── prepared statements ──
 const stmt = {
-  insertPool: db.prepare(`INSERT INTO pools (id, code, name, buy_in, currency, rules, pin_hash, pin_salt, status, created_at)
-    VALUES (@id, @code, @name, @buy_in, @currency, @rules, @pin_hash, @pin_salt, 'live', @created_at)`),
+  insertPool: db.prepare(`INSERT INTO pools (id, code, name, buy_in, currency, rules, pin_hash, pin_salt, status, synced, created_at)
+    VALUES (@id, @code, @name, @buy_in, @currency, @rules, @pin_hash, @pin_salt, 'live', @synced, @created_at)`),
   poolByCode: db.prepare('SELECT * FROM pools WHERE code = ?'),
   poolById: db.prepare('SELECT * FROM pools WHERE id = ?'),
+  syncedPoolIds: db.prepare('SELECT id FROM pools WHERE synced = 1'),
   insertMatch: db.prepare(`INSERT INTO matches
-    (id, pool_id, num, stage, round, group_name, matchday, home, away, home_source, away_source, kickoff, status, locked, updated_at)
-    VALUES (@id, @pool_id, @num, @stage, @round, @group_name, @matchday, @home, @away, @home_source, @away_source, @kickoff, 'upcoming', 0, @updated_at)`),
+    (id, pool_id, num, stage, round, group_name, matchday, home, away, home_source, away_source, ext_id, kickoff, status, locked, updated_at)
+    VALUES (@id, @pool_id, @num, @stage, @round, @group_name, @matchday, @home, @away, @home_source, @away_source, @ext_id, @kickoff, 'upcoming', 0, @updated_at)`),
+  updateMatchStructure: db.prepare(`UPDATE matches SET stage=@stage, round=@round, group_name=@group_name,
+    matchday=@matchday, home=@home, away=@away, ext_id=@ext_id, kickoff=@kickoff, updated_at=@updated_at WHERE id=@id`),
   matchesByPool: db.prepare('SELECT * FROM matches WHERE pool_id = ? ORDER BY num'),
   matchByNum: db.prepare('SELECT * FROM matches WHERE pool_id = ? AND num = ?'),
   updateMatchTeams: db.prepare('UPDATE matches SET home = @home, away = @away, updated_at = @updated_at WHERE id = @id'),
@@ -64,7 +67,7 @@ function sanitizeRules(input = {}) {
 }
 
 // ── pool creation ──
-export function createPool({ name, buyIn, currency, rules, pin, hostName }) {
+export function createPool({ name, buyIn, currency, rules, pin, hostName, synced = false }) {
   const fixtures = getFixtures();
   let code;
   // very unlikely collision, but be safe
@@ -84,6 +87,7 @@ export function createPool({ name, buyIn, currency, rules, pin, hostName }) {
     rules: JSON.stringify(sanitizeRules(rules)),
     pin_hash: hash,
     pin_salt: salt,
+    synced: synced ? 1 : 0,
     created_at: ts,
   };
 
@@ -102,6 +106,7 @@ export function createPool({ name, buyIn, currency, rules, pin, hostName }) {
         away: m.away ?? null,
         home_source: m.homeSource ?? null,
         away_source: m.awaySource ?? null,
+        ext_id: m.extId ?? null,
         kickoff: m.kickoff,
         updated_at: ts,
       });
@@ -109,8 +114,84 @@ export function createPool({ name, buyIn, currency, rules, pin, hostName }) {
   });
   tx();
 
+  // If the pool is synced, immediately apply any results the provider already has.
+  if (synced) applyCanonicalToPool(id, fixtures);
+
   const host = addPlayer({ poolId: id, displayName: hostName || 'Host', isHost: true });
   return { pool: stmt.poolById.get(id), host };
+}
+
+export function listSyncedPoolIds() {
+  return stmt.syncedPoolIds.all().map((r) => r.id);
+}
+
+/**
+ * Apply a synced canonical fixture set (structure + results) to one pool.
+ * Used for provider-driven pools: teams/kickoffs come from the feed and
+ * results are applied + scored automatically. Returns true if anything changed.
+ */
+export function applyCanonicalToPool(poolId, canonical) {
+  const pool = getPoolById(poolId);
+  if (!pool || !canonical?.matches) return false;
+  const rules = parseRules(pool);
+  const results = canonical.results || {};
+  let changed = false;
+
+  const tx = db.transaction(() => {
+    for (const m of canonical.matches) {
+      let row = stmt.matchByNum.get(poolId, m.id);
+      if (!row) {
+        stmt.insertMatch.run({
+          id: `${poolId}:${m.id}`, pool_id: poolId, num: m.id, stage: m.stage, round: m.round,
+          group_name: m.group ?? null, matchday: m.matchday ?? null, home: m.home ?? null, away: m.away ?? null,
+          home_source: m.homeSource ?? null, away_source: m.awaySource ?? null, ext_id: m.extId ?? null,
+          kickoff: m.kickoff, updated_at: now(),
+        });
+        changed = true;
+      } else if (
+        row.home !== (m.home ?? null) || row.away !== (m.away ?? null) ||
+        row.kickoff !== m.kickoff || row.stage !== m.stage ||
+        row.group_name !== (m.group ?? null) || row.ext_id !== (m.extId ?? null)
+      ) {
+        stmt.updateMatchStructure.run({
+          id: row.id, stage: m.stage, round: m.round, group_name: m.group ?? null, matchday: m.matchday ?? null,
+          home: m.home ?? null, away: m.away ?? null, ext_id: m.extId ?? null, kickoff: m.kickoff, updated_at: now(),
+        });
+        changed = true;
+      }
+
+      row = stmt.matchByNum.get(poolId, m.id);
+      const r = results[m.id];
+      if (r && r.status === 'final' && r.homeScore != null && r.awayScore != null) {
+        if (row.status !== 'final' || row.home_score !== r.homeScore || row.away_score !== r.awayScore || row.pen_winner !== (r.penWinner ?? null)) {
+          stmt.updateMatchResult.run({
+            id: row.id, home_score: r.homeScore, away_score: r.awayScore, pen_winner: r.penWinner ?? null,
+            status: 'final', locked: 1, updated_at: now(),
+          });
+          recomputeMatchPoints(row.id, { ...row, home_score: r.homeScore, away_score: r.awayScore, status: 'final' }, rules);
+          changed = true;
+        }
+      } else if (r && r.status === 'live') {
+        if (row.status !== 'live' || row.home_score !== (r.homeScore ?? null) || row.away_score !== (r.awayScore ?? null)) {
+          stmt.updateMatchResult.run({
+            id: row.id, home_score: r.homeScore ?? null, away_score: r.awayScore ?? null, pen_winner: null,
+            status: 'live', locked: 1, updated_at: now(),
+          });
+          changed = true;
+        }
+      } else if (row.status === 'final') {
+        // provider walked a result back — clear it
+        stmt.updateMatchResult.run({
+          id: row.id, home_score: null, away_score: null, pen_winner: null, status: 'upcoming', locked: 0, updated_at: now(),
+        });
+        for (const p of stmt.predsByMatch.all(row.id)) stmt.updatePredPoints.run({ id: p.id, points: 0 });
+        changed = true;
+      }
+    }
+    maybeFinishPool(poolId);
+  });
+  tx();
+  return changed;
 }
 
 export function getPoolByCode(code) {
@@ -424,6 +505,7 @@ export function buildState(poolId, viewerId = null) {
       currency: pool.currency,
       rules,
       status: pool.status,
+      synced: !!pool.synced,
       createdAt: pool.created_at,
     },
     teams,

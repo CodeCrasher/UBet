@@ -3,6 +3,7 @@ dist/
 data/*.db
 data/*.db-shm
 data/*.db-wal
+server/data/fixtures.synced.json
 *.log
 .env
 .env.local

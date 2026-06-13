@@ -71,6 +71,7 @@ function Team({ code, label, flag, align }) {
 
 function MatchCard({ match, tmap }) {
   const host = isHost.value;
+  const synced = poolState.value?.pool?.synced;
   const myPred = myPreds.value[match.num];
   const home = match.home ? tmap.get(match.home) : null;
   const away = match.away ? tmap.get(match.away) : null;
@@ -112,7 +113,10 @@ function MatchCard({ match, tmap }) {
         <LockedPick match={match} myPred={myPred} />
       )}
 
-      {host && resolved ? <HostEntry match={match} /> : null}
+      {host && resolved && !synced ? <HostEntry match={match} /> : null}
+      {host && synced && match.status !== 'final' ? (
+        <div class="sync-note">🔴 Results sync automatically from the live feed</div>
+      ) : null}
     </article>
   );
 }

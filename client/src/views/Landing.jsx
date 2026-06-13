@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { createPool, joinPool, peekPool, showToast } from '../lib/store.js';
+import { createPool, joinPool, peekPool, showToast, appConfig } from '../lib/store.js';
 import { request } from '../lib/api.js';
 import { money } from '../lib/helpers.js';
 
@@ -79,10 +79,12 @@ function CreateForm() {
     buyIn: 20,
     currency: 'USD',
     pin: '',
+    manual: false,
     rules: { exact: 5, resultGd: 3, result: 1, knockoutMultiplier: 2 },
   });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const sync = appConfig.value?.sync;
 
   useEffect(() => {
     request('/config').then((c) => setForm((f) => ({ ...f, buyIn: c.defaultBuyIn, currency: c.defaultCurrency }))).catch(() => {});
@@ -107,6 +109,12 @@ function CreateForm() {
   return (
     <form class="card card-pad" onSubmit={submit}>
       {err ? <div class="error-banner">{err}</div> : null}
+      {sync?.enabled ? (
+        <div class="sync-banner">
+          <span>🔴</span>
+          <span>Live results are on — fixtures &amp; scores sync automatically from <b>{sync.provider}</b>. You won't need to enter results by hand.</span>
+        </div>
+      ) : null}
       <div class="field">
         <label>Pool name</label>
         <input class="input" value={form.name} onInput={(e) => up('name', e.target.value)} />
@@ -138,6 +146,12 @@ function CreateForm() {
         <div class="sp"><div class="v num">×{form.rules.knockoutMultiplier}</div><div class="l">KO rounds</div></div>
       </div>
       <p class="hint" style="margin:2px 0 14px">Defaults are sensible — you can fine-tune scoring anytime in settings.</p>
+      {sync?.enabled ? (
+        <label class="checkbox-row">
+          <input type="checkbox" checked={form.manual} onInput={(e) => up('manual', e.target.checked)} />
+          Enter results manually instead (ignore the live feed for this pool)
+        </label>
+      ) : null}
       <button class="btn btn-primary btn-block" disabled={busy || !form.hostName.trim() || form.pin.length < 4}>
         {busy ? 'Creating…' : 'Create pool & get code →'}
       </button>

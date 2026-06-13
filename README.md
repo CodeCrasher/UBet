@@ -93,7 +93,13 @@ runs with no `.env` at all.
 | `CORS_ORIGIN`      | `*`                | Comma-separated allowed origins, or `*`. |
 | `DEFAULT_BUY_IN`   | `20`               | Buy-in pre-filled when a host creates a pool. |
 | `DEFAULT_CURRENCY` | `USD`              | Currency pre-filled when a host creates a pool. |
-| `FIXTURES_API_URL` | _(empty)_          | Optional: pull fixtures from a URL at boot (see below). |
+| `SYNC_PROVIDER`    | _(empty)_          | `thesportsdb` or `footballdata` to pull real fixtures + live results (see below). Empty = committed snapshot + manual results. |
+| `FOOTBALL_DATA_API_KEY` | _(empty)_     | Free key from [football-data.org](https://football-data.org) (required for `footballdata`). |
+| `SYNC_INTERVAL_MS` | `60000`            | How often to poll the provider for live updates. |
+| `SYNC_SEASON`      | `2026`             | Tournament season to sync. |
+| `SPORTSDB_KEY`     | `3`                | TheSportsDB key (`3` is the shared free key). |
+| `SPORTSDB_LEAGUE`  | `4429`             | TheSportsDB league id (4429 = FIFA World Cup). |
+| `FIXTURES_API_URL` | _(empty)_          | Optional: pull a full fixtures snapshot from a URL at boot (lower priority than `SYNC_PROVIDER`). |
 | `FIXTURES_API_KEY` | _(empty)_          | Optional bearer token for `FIXTURES_API_URL`. |
 
 ---
@@ -102,14 +108,39 @@ runs with no `.env` at all.
 
 The 48-team, 12-group, 104-match structure (group stage + full knockout bracket) is
 generated deterministically by [`server/data/build-fixtures.mjs`](server/data/build-fixtures.mjs)
-and committed as `server/data/fixtures.json`. Each new pool clones this snapshot, so
-every host enters results for their own pool independently.
+and committed as `server/data/fixtures.json`. By default each new pool clones this
+snapshot and the host enters results manually.
 
-- **Live source (optional):** set `FIXTURES_API_URL` to a JSON endpoint returning the
-  same shape as `fixtures.json`. It's fetched once at boot; any failure falls back to
-  the committed snapshot, so the app is always offline-safe.
-- **Custom fixtures:** edit the `TEAMS` table in `build-fixtures.mjs` and run
-  `npm run build:fixtures`, or hand-edit `fixtures.json`.
+### Live sync (real fixtures + results)
+
+Set `SYNC_PROVIDER` to pull **real fixtures and live scores** from a football data API.
+The server polls on `SYNC_INTERVAL_MS`, rebuilds a canonical tournament (stable per-pool
+match numbers so predictions stay attached), applies results to every synced pool,
+recomputes points, and pushes updates over Socket.io. Synced pools don't need a host to
+enter results — and match numbers stay stable across syncs.
+
+| Provider | Key? | Notes |
+|----------|------|-------|
+| `thesportsdb`  | No (free key `3`) | Works out of the box. Coverage depends on what TheSportsDB has loaded for the season — often **partial/provisional** until close to / during the tournament. |
+| `footballdata` | Yes (free)        | Most complete + accurate. Register at [football-data.org](https://football-data.org), set `FOOTBALL_DATA_API_KEY`. |
+
+```bash
+# Keyless, works immediately (data may be partial right now):
+SYNC_PROVIDER=thesportsdb npm start
+
+# Complete + accurate (recommended once you have a free key):
+SYNC_PROVIDER=footballdata FOOTBALL_DATA_API_KEY=xxxx npm start
+```
+
+> **Why isn't the default draw "correct"?** Until close to / during the tournament, the
+> official WC 2026 draw and results aren't fully published in any *free* API. The committed
+> snapshot is a complete-but-illustrative bracket so the app is usable offline; turn on a
+> provider and it self-corrects to real data (and live results) as the feed fills in.
+> Adding a new provider is just another adapter in [`server/providers/`](server/providers/).
+
+- **Custom fixtures (no API):** edit the `TEAMS` table in `build-fixtures.mjs` and run
+  `npm run build:fixtures`, or hand-edit `fixtures.json`. A host can also edit/lock any
+  fixture in-app on non-synced pools.
 
 See **Non-obvious tradeoffs** below for what's a real-tournament approximation.
 
@@ -144,11 +175,16 @@ server/
   routes.js         REST API (player + PIN-gated host endpoints)
   sockets.js        Socket.io subscribe/snapshot
   realtime.js       Authoritative state push helpers
-  fixtures.js       Fixture loader (committed snapshot or live API)
+  fixtures.js       Fixture loader (snapshot / synced canonical / custom URL)
+  sync.js           Live-sync orchestrator (provider → canonical → pools → push)
+  providers/        Pluggable data adapters
+    thesportsdb.mjs      Keyless free provider
+    footballdata.mjs     football-data.org provider (free key)
   seed.js           Demo-pool generator
   data/
     build-fixtures.mjs   Deterministic fixture generator
     fixtures.json        Committed WC2026 snapshot
+    countries.mjs        Team name → code + flag resolver
 client/
   src/
     app.jsx, main.jsx

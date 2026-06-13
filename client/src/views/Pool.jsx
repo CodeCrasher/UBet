@@ -45,7 +45,10 @@ export function Pool() {
       <main class="main">
         <div class="spread" style="margin-bottom:14px">
           <div>
-            <h1 style="font-size:1.45rem">{state.pool.name}</h1>
+            <div class="row" style="gap:8px">
+              <h1 style="font-size:1.45rem">{state.pool.name}</h1>
+              {state.pool.synced ? <span class="live-pill">🔴 Live sync</span> : null}
+            </div>
             <p class="muted" style="font-size:.86rem">
               {state.players.length} player{state.players.length === 1 ? '' : 's'} ·
               {' '}{state.pool.status === 'finished' ? ' 🏁 Finished' : ' In play'}

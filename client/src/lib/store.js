@@ -22,6 +22,9 @@ export const toast = signal(null);
 export const view = computed(() => (session.value ? 'pool' : 'landing'));
 export const isHost = computed(() => !!session.value?.hostPin);
 export const me = computed(() => session.value?.playerId || null);
+export const appConfig = signal(null);
+
+request('/config').then((c) => (appConfig.value = c)).catch(() => {});
 
 function persist(s) {
   session.value = s;
@@ -95,6 +98,7 @@ export async function createPool(form) {
       pin: form.pin,
       hostName: form.hostName,
       rules: form.rules,
+      manual: form.manual,
     },
   });
   persist({

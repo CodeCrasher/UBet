@@ -10,6 +10,7 @@ import { initFixtures } from './fixtures.js';
 import { attachSockets } from './sockets.js';
 import { createApiRouter } from './routes.js';
 import { pushPoolUpdate, room } from './realtime.js';
+import { startSync } from './sync.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
@@ -29,6 +30,7 @@ app.use(express.json({ limit: '256kb' }));
 
 app.use('/api', createApiRouter(io));
 attachSockets(io);
+startSync(io);
 
 // Serve the built SPA in production; in dev the Vite server handles the client.
 if (existsSync(DIST)) {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { verifyPin } from './auth.js';
 import { pushPoolUpdate } from './realtime.js';
+import { syncEnabled, activeProvider, runSync } from './sync.js';
 import {
   createPool,
   joinPool,
@@ -58,13 +59,17 @@ export function createApiRouter(io) {
     res.json({
       defaultBuyIn: Number(process.env.DEFAULT_BUY_IN) || 20,
       defaultCurrency: process.env.DEFAULT_CURRENCY || 'USD',
+      sync: { enabled: syncEnabled(), provider: activeProvider()?.label || null },
     }),
   );
 
   r.post('/pools', wrap((req, res) => {
-    const { name, buyIn, currency, rules, pin, hostName } = req.body || {};
+    const { name, buyIn, currency, rules, pin, hostName, manual } = req.body || {};
     if (!pin || String(pin).length < 4) throw httpError(400, 'Host PIN must be at least 4 digits');
-    const { pool, host } = createPool({ name, buyIn, currency, rules, pin, hostName });
+    // When a live provider is configured, new pools auto-sync results unless the
+    // host explicitly opts into manual result entry.
+    const synced = syncEnabled() && !manual;
+    const { pool, host } = createPool({ name, buyIn, currency, rules, pin, hostName, synced });
     res.status(201).json({
       pool: { code: pool.code, name: pool.name },
       token: host.token,
@@ -141,6 +146,13 @@ export function createApiRouter(io) {
     updateSettings({ poolId: req.pool.id, name, buyIn, currency, rules });
     pushPoolUpdate(io, req.pool.id);
     res.json({ ok: true });
+  }));
+
+  // Force an immediate pull from the live provider (host-gated).
+  r.post('/pools/:code/resync', resolvePool, requireHost, wrap(async (_req, res) => {
+    if (!syncEnabled()) throw httpError(409, 'Live sync is not enabled on this server');
+    const result = await runSync(io, { force: true });
+    res.json(result);
   }));
 
   // JSON error handler — catches errors passed via next() from middleware.

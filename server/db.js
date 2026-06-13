@@ -27,6 +27,7 @@ db.exec(`
     pin_hash      TEXT NOT NULL,
     pin_salt      TEXT NOT NULL,
     status        TEXT NOT NULL DEFAULT 'live',  -- live | finished
+    synced        INTEGER NOT NULL DEFAULT 0,    -- 1 ⇒ results auto-sync from a provider
     created_at    TEXT NOT NULL
   );
 
@@ -54,6 +55,7 @@ db.exec(`
     away          TEXT,
     home_source   TEXT,                     -- slot token for unresolved KO sides
     away_source   TEXT,
+    ext_id        TEXT,                     -- provider match id (for live sync)
     kickoff       TEXT NOT NULL,
     home_score    INTEGER,
     away_score    INTEGER,
@@ -82,6 +84,14 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_pred_match ON predictions(match_id);
   CREATE INDEX IF NOT EXISTS idx_pred_player ON predictions(player_id);
 `);
+
+// Lightweight migrations for databases created before these columns existed.
+function ensureColumn(table, column, ddl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+}
+ensureColumn('pools', 'synced', 'synced INTEGER NOT NULL DEFAULT 0');
+ensureColumn('matches', 'ext_id', 'ext_id TEXT');
 
 export default db;
 export { DB_PATH };
