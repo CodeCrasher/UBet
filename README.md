@@ -12,6 +12,11 @@ Preact single-page app served from the same process.
 
 <p align="center"><em>Light, airy UI · pitch-green &amp; gold · mobile-first · animated pot counter &amp; live leaderboard.</em></p>
 
+<p align="center">
+  <strong>▶ Live:</strong> <a href="https://ubet-production.up.railway.app">ubet-production.up.railway.app</a>
+  &nbsp;·&nbsp; <strong>Source:</strong> <a href="https://github.com/CodeCrasher/UBet">github.com/CodeCrasher/UBet</a>
+</p>
+
 ---
 
 ## Features
@@ -47,7 +52,7 @@ Preact single-page app served from the same process.
 | Persistence  | SQLite via `better-sqlite3` (WAL mode)                        |
 | Frontend     | Preact + `@preact/signals`, built with Vite                   |
 | Tests        | `node --test` (unit + integration), Playwright (E2E)          |
-| Deploy       | Single Docker image, Railway-ready                            |
+| Deploy       | Single Docker image · live on Railway · GitHub Actions auto-deploy |
 
 ---
 
@@ -210,23 +215,52 @@ npm run test:e2e      # Playwright E2E, desktop + mobile (builds + starts the ap
 
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs lint + build + tests
 on every push/PR, with Playwright E2E in a separate job.
+[`deploy.yml`](.github/workflows/deploy.yml) then ships `main` to Railway (see
+**Deploy** below).
 
 ---
 
 ## Deploy to Railway
 
-UBet deploys as **one service** from the included `Dockerfile`.
+UBet deploys as **one service** from the included `Dockerfile`, and is **already live**
+at **https://ubet-production.up.railway.app**.
 
-1. Push this repo to GitHub.
-2. In Railway: **New Project → Deploy from GitHub repo**. Railway reads
-   [`railway.json`](railway.json) and builds the Dockerfile automatically.
-3. **Add a Volume** so data survives redeploys: mount it at `/app/data` (the default
-   `DATABASE_PATH` is `/app/data/ubet.db`), or mount anywhere and set `DATABASE_PATH`
-   to a file inside it.
-4. Set any env vars you want to override (see the table above). None are required.
-5. Railway assigns `PORT` automatically; the server honours it.
+### How the live deployment is wired
 
-The same image runs anywhere Docker does:
+| Piece | Setup |
+|-------|-------|
+| Build | Railway reads [`railway.json`](railway.json) → builds the `Dockerfile` (pins the `better-sqlite3` native build). |
+| Persistence | A Railway **Volume** is mounted at `/app/data`; the default `DATABASE_PATH` is `/app/data/ubet.db`, so the SQLite DB survives redeploys. |
+| Port | Railway injects `PORT`; the server honours it. |
+| Auto-deploy | [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs `railway up` on every push to `main`. |
+
+### Continuous deployment (push → live)
+
+On every push to `main`, GitHub Actions deploys to Railway. This needs **one secret**:
+
+1. Create a Railway token — [Project → Settings → Tokens](https://railway.com/project/fa7262bc-a582-45a0-86ce-6a8a52f5e655/settings/tokens) (project-scoped) or [Account → Tokens](https://railway.com/account/tokens).
+2. Add it to the repo:
+   ```bash
+   gh secret set RAILWAY_TOKEN --repo CodeCrasher/UBet   # paste the token
+   ```
+
+After that, `git push` → CI (lint + build + tests) → auto-deploy. (`ci.yml` and `deploy.yml`
+run independently, mirroring a typical Railway setup.)
+
+### Deploy your own copy
+
+1. Fork/clone, then in Railway: **New Project → Deploy from GitHub repo** (Railway builds
+   the Dockerfile automatically), or from the CLI:
+   ```bash
+   railway init --name UBet
+   railway up
+   railway volume add -m /app/data        # persist the SQLite DB
+   railway domain                          # get a public URL
+   ```
+2. Set any env vars you want (see the table above) — e.g. `SYNC_PROVIDER` for live data.
+   None are required.
+
+### Run anywhere Docker runs
 
 ```bash
 docker build -t ubet .
@@ -235,8 +269,8 @@ docker run -p 8080:8080 -v ubet-data:/app/data ubet
 ```
 
 > Prefer Nixpacks over the Dockerfile? Railway's Nixpacks will detect the Node app and
-> run `npm run build` (via the `build` script) then `npm start`. The Dockerfile is the
-> recommended path because it pins the `better-sqlite3` native build.
+> run `npm run build` then `npm start`. The Dockerfile is recommended because it pins the
+> `better-sqlite3` native build.
 
 ---
 
@@ -244,9 +278,11 @@ docker run -p 8080:8080 -v ubet-data:/app/data ubet
 
 These were judgment calls — flagged here rather than blocking:
 
-- **Seeded draw, not the official one.** Group assignments are a plausible snapshot, not
-  the official FIFA draw. Replace `TEAMS` in `build-fixtures.mjs` (or use
-  `FIXTURES_API_URL`) for the real draw. A host can also edit/lock any fixture in-app.
+- **Seeded draw by default, not the official one.** The committed bracket is a complete
+  but illustrative snapshot — no *free* API has the full, correct WC 2026 draw + results
+  until close to / during the tournament. Set `SYNC_PROVIDER` (see **Live sync**) to pull
+  real fixtures + live scores; or replace `TEAMS` in `build-fixtures.mjs`; or have a host
+  edit/lock fixtures in-app.
 - **Best-thirds routing is simplified.** The 8 best third-placed teams are picked
   correctly (points → GD → GF), but routed into Round-of-32 slots by group letter
   rather than the official lookup table. The bracket is structurally correct and fully
@@ -258,8 +294,9 @@ These were judgment calls — flagged here rather than blocking:
   opaque token (localStorage); host actions are gated by a per-pool PIN (scrypt-hashed).
   There's no email/password or rate-limiting — add a reverse proxy / auth layer if you
   expose it widely.
-- **Per-pool results.** Each pool's host enters results for their own pool, so pools are
-  fully self-contained (no global tournament-admin role).
+- **Per-pool results (manual mode).** With no provider configured, each pool's host enters
+  results for their own pool, so pools are fully self-contained (no global admin role).
+  With `SYNC_PROVIDER` set, synced pools instead auto-score from the live feed.
 - **Knockout penalty scoreline.** Prediction points score the entered 90/120-minute
   scoreline. For a drawn knockout match the host also records the shoot-out winner,
   which is used only for bracket advancement, not for scoring.
