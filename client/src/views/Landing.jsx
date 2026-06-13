@@ -17,7 +17,48 @@ export function Landing() {
         <button class={mode === 'create' ? 'active' : ''} onClick={() => setMode('create')}>Create a pool</button>
       </div>
       {mode === 'join' ? <JoinForm /> : <CreateForm />}
+      <HowItWorks />
     </div>
+  );
+}
+
+const STEPS = [
+  { ic: '🔑', t: 'Join the pool', d: 'Drop in the room code your host shares, pick a display name — you’re in.' },
+  { ic: '🎯', t: 'Call the score', d: 'Tap the exact scoreline for each match. Edit freely right up until kickoff.' },
+  { ic: '⚡', t: 'Bank points', d: 'The closer your guess, the more you score. The board updates live as results land.' },
+  { ic: '🏆', t: 'Take the pot', d: 'Top the leaderboard when the final whistle blows — winner takes the pot.' },
+];
+
+const SCORING = [
+  { v: '5', l: 'Exact score' },
+  { v: '3', l: 'Right margin' },
+  { v: '1', l: 'Right result' },
+  { v: '0', l: 'Off target' },
+];
+
+function HowItWorks() {
+  return (
+    <section class="howto">
+      <div class="howto-head"><span class="t">How it works</span><span class="line" /></div>
+      <div class="steps">
+        {STEPS.map((s, i) => (
+          <div class="step" key={s.t}>
+            <span class="step-ic">{s.ic}<span class="n">{i + 1}</span></span>
+            <div class="body">
+              <div class="st-title">{s.t}</div>
+              <div class="st-desc">{s.d}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <span class="howto-lbl">Points per match</span>
+      <div class="scoring-preview">
+        {SCORING.map((s) => (
+          <div class="sp" key={s.l}><div class="v num">{s.v}</div><div class="l">{s.l}</div></div>
+        ))}
+      </div>
+      <p class="howto-foot">Knockout matches can be worth more — your host sets the exact scoring. 💸 The pot is buy-ins tracked, never charged.</p>
+    </section>
   );
 }
 
