@@ -49,11 +49,11 @@ const stmt = {
   setPoolStatus: db.prepare('UPDATE pools SET status = @status WHERE id = @id'),
   updatePoolSettings: db.prepare('UPDATE pools SET name = @name, buy_in = @buy_in, currency = @currency, rules = @rules WHERE id = @id'),
   // custom bets
-  insertCustomBet: db.prepare(`INSERT INTO custom_bets (id, pool_id, question, options, points, answer, created_at)
-    VALUES (@id, @pool_id, @question, @options, @points, NULL, @created_at)`),
+  insertCustomBet: db.prepare(`INSERT INTO custom_bets (id, pool_id, question, options, points, answer, locks_at, created_at)
+    VALUES (@id, @pool_id, @question, @options, @points, NULL, @locks_at, @created_at)`),
   customBetsByPool: db.prepare('SELECT * FROM custom_bets WHERE pool_id = ? ORDER BY created_at'),
   customBetById: db.prepare('SELECT * FROM custom_bets WHERE id = ?'),
-  updateCustomBet: db.prepare('UPDATE custom_bets SET question=@question, options=@options, points=@points, answer=@answer WHERE id=@id'),
+  updateCustomBet: db.prepare('UPDATE custom_bets SET question=@question, options=@options, points=@points, answer=@answer, locks_at=@locks_at WHERE id=@id'),
   deleteCustomBet: db.prepare('DELETE FROM custom_bets WHERE id = ?'),
   answersByPool: db.prepare('SELECT * FROM custom_answers WHERE pool_id = ?'),
   upsertCustomAnswer: db.prepare(`INSERT INTO custom_answers (id, pool_id, bet_id, player_id, answer, updated_at)
@@ -392,7 +392,17 @@ function parseOptions(options) {
   return clean.length >= 2 ? clean : null; // <2 options ⇒ free-text answer
 }
 
-export function createCustomBet({ poolId, question, options, points }) {
+function parseDeadline(v) {
+  if (v == null || v === '') return null;
+  const t = new Date(v).getTime();
+  return Number.isNaN(t) ? null : new Date(t).toISOString();
+}
+
+export function betLocked(bet) {
+  return bet.answer == null && bet.locks_at != null && Date.now() >= new Date(bet.locks_at).getTime();
+}
+
+export function createCustomBet({ poolId, question, options, points, locksAt }) {
   const q = String(question || '').trim();
   if (!q) throw httpError(400, 'Bet question is required');
   const opts = parseOptions(options);
@@ -401,12 +411,13 @@ export function createCustomBet({ poolId, question, options, points }) {
     id, pool_id: poolId, question: q.slice(0, 140),
     options: opts ? JSON.stringify(opts) : null,
     points: Math.max(0, Math.min(50, Number(points) || 0)),
+    locks_at: parseDeadline(locksAt),
     created_at: now(),
   });
   return stmt.customBetById.get(id);
 }
 
-export function updateCustomBet({ poolId, betId, question, options, points, answer }) {
+export function updateCustomBet({ poolId, betId, question, options, points, answer, locksAt }) {
   const bet = stmt.customBetById.get(betId);
   if (!bet || bet.pool_id !== poolId) throw httpError(404, 'Bet not found');
   let opts = bet.options;
@@ -422,6 +433,7 @@ export function updateCustomBet({ poolId, betId, question, options, points, answ
     options: opts,
     points: points !== undefined ? Math.max(0, Math.min(50, Number(points) || 0)) : bet.points,
     answer: ans,
+    locks_at: locksAt !== undefined ? parseDeadline(locksAt) : bet.locks_at,
   });
   return stmt.customBetById.get(betId);
 }
@@ -436,6 +448,7 @@ export function answerCustomBet({ poolId, betId, playerId, answer }) {
   const bet = stmt.customBetById.get(betId);
   if (!bet || bet.pool_id !== poolId) throw httpError(404, 'Bet not found');
   if (bet.answer != null) throw httpError(409, 'This bet is already settled');
+  if (betLocked(bet)) throw httpError(409, 'Betting on this is closed');
   const a = String(answer || '').trim();
   if (!a) throw httpError(400, 'Pick an answer');
   if (bet.options) {
@@ -579,15 +592,19 @@ export function buildState(poolId, viewerId = null) {
     if (!answersByBet.has(a.bet_id)) answersByBet.set(a.bet_id, []);
     answersByBet.get(a.bet_id).push({ playerId: a.player_id, answer: a.answer });
   }
-  const customBets = betRows.map((b) => ({
-    id: b.id,
-    question: b.question,
-    options: b.options ? JSON.parse(b.options) : null,
-    points: b.points,
-    answer: b.answer,
-    status: b.answer != null ? 'settled' : 'open',
-    answers: answersByBet.get(b.id) || [],
-  }));
+  const customBets = betRows.map((b) => {
+    const locked = betLocked(b);
+    return {
+      id: b.id,
+      question: b.question,
+      options: b.options ? JSON.parse(b.options) : null,
+      points: b.points,
+      answer: b.answer,
+      locksAt: b.locks_at || null,
+      status: b.answer != null ? 'settled' : locked ? 'locked' : 'open',
+      answers: answersByBet.get(b.id) || [],
+    };
+  });
   const myCustomAnswers = {};
   if (viewerId) for (const a of answerRows) if (a.player_id === viewerId) myCustomAnswers[a.bet_id] = a.answer;
 

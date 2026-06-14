@@ -85,6 +85,7 @@ db.exec(`
     options       TEXT,                     -- JSON array of choices, or null for free text
     points        INTEGER NOT NULL DEFAULT 3,
     answer        TEXT,                     -- winning answer; null ⇒ still open
+    locks_at      TEXT,                     -- ISO deadline; after it, no more answers
     created_at    TEXT NOT NULL
   );
 
@@ -115,6 +116,7 @@ function ensureColumn(table, column, ddl) {
 }
 ensureColumn('pools', 'synced', 'synced INTEGER NOT NULL DEFAULT 0');
 ensureColumn('matches', 'ext_id', 'ext_id TEXT');
+ensureColumn('custom_bets', 'locks_at', 'locks_at TEXT');
 
 export default db;
 export { DB_PATH };

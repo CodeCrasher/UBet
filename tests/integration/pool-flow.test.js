@@ -77,6 +77,20 @@ test('custom bets: answer, settle, and award points', () => {
   assert.throws(() => pools.answerCustomBet({ poolId: pool.id, betId: bet.id, playerId: bob.id, answer: 'Haaland' }), /settled/i);
 });
 
+test('custom bet closes at its deadline', () => {
+  const { pool, host } = pools.createPool({ name: 'DL', buyIn: 0, currency: 'USD', pin: '1', hostName: 'H' });
+  const past = new Date(Date.now() - 60_000).toISOString();
+  const open = pools.createCustomBet({ poolId: pool.id, question: 'Open one?', options: 'A,B', points: 3 });
+  const closed = pools.createCustomBet({ poolId: pool.id, question: 'Closed one?', options: 'A,B', points: 3, locksAt: past });
+
+  pools.answerCustomBet({ poolId: pool.id, betId: open.id, playerId: host.id, answer: 'A' });
+  assert.throws(() => pools.answerCustomBet({ poolId: pool.id, betId: closed.id, playerId: host.id, answer: 'A' }), /closed/i);
+
+  const st = pools.buildState(pool.id, host.id);
+  assert.equal(st.customBets.find((b) => b.id === closed.id).status, 'locked');
+  assert.equal(st.customBets.find((b) => b.id === open.id).status, 'open');
+});
+
 test('knockout bracket resolves after all group games are final', () => {
   const { pool } = pools.createPool({
     name: 'Bracket', buyIn: 0, currency: 'USD', pin: '1234', hostName: 'H',

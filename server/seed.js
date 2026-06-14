@@ -91,19 +91,23 @@ setPlayerPaid(pool.id, host.id, true);
 setPlayerPaid(pool.id, players[1].id, true);
 setPlayerPaid(pool.id, players[2].id, true);
 
-// Custom (prop) bets — one settled, two still open.
+// Custom (prop) bets — one settled, one open with a deadline, one already closed.
 const goldenBoot = createCustomBet({ poolId: pool.id, question: 'Golden Boot winner?', options: 'Mbappé, Haaland, Kane, Vinícius Jr', points: 8 });
-const trophy = createCustomBet({ poolId: pool.id, question: 'Who lifts the trophy? 🏆', options: 'Brazil, France, Argentina, Spain, England', points: 10 });
-createCustomBet({ poolId: pool.id, question: 'Goals in the Final — Over/Under 2.5?', options: 'Over, Under', points: 3 });
+const trophy = createCustomBet({ poolId: pool.id, question: 'Who lifts the trophy? 🏆', options: 'Brazil, France, Argentina, Spain, England', points: 10, locksAt: '2026-07-19T18:00:00.000Z' });
+const goals = createCustomBet({ poolId: pool.id, question: 'Goals in the Final — Over/Under 2.5?', options: 'Over, Under', points: 3 });
 
 const bootOpts = ['Mbappé', 'Haaland', 'Kane', 'Vinícius Jr'];
 const trophyOpts = ['Brazil', 'France', 'Argentina', 'Spain', 'England'];
+const goalsOpts = ['Over', 'Under'];
 players.forEach((p, i) => {
   answerCustomBet({ poolId: pool.id, betId: goldenBoot.id, playerId: p.id, answer: bootOpts[i % bootOpts.length] });
   answerCustomBet({ poolId: pool.id, betId: trophy.id, playerId: p.id, answer: trophyOpts[i % trophyOpts.length] });
+  answerCustomBet({ poolId: pool.id, betId: goals.id, playerId: p.id, answer: goalsOpts[i % goalsOpts.length] });
 });
 // Settle the Golden Boot so some players bank custom points.
 updateCustomBet({ poolId: pool.id, betId: goldenBoot.id, answer: 'Haaland' });
+// Close the goals bet (deadline already passed) to show the locked state.
+updateCustomBet({ poolId: pool.id, betId: goals.id, locksAt: '2026-06-01T00:00:00.000Z' });
 
 const state = buildState(pool.id, host.id);
 

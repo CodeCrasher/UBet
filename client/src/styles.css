@@ -465,6 +465,31 @@ a { color: var(--pitch-600); }
 .btn-icon.del { background: transparent; border-color: transparent; font-size: 0.95rem; opacity: 0.6; }
 .btn-icon.del:hover { opacity: 1; background: var(--live-bg); }
 
+.deadline-field { display: flex; flex-direction: column; gap: 5px; }
+.deadline-field > span { font-size: 0.76rem; font-weight: 600; color: var(--ink-2); }
+.bet-deadline { font-size: 0.76rem; color: var(--gold-500); font-weight: 600; margin-top: 6px; }
+.bet.locked { background: var(--surface-2); }
+.bet.locked .bet-deadline { color: var(--muted); }
+
+/* ---------- my bets ---------- */
+.mybets { background: linear-gradient(160deg, var(--pitch-50), var(--surface) 60%); border-color: var(--pitch-100); }
+.rank-chip { font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; color: var(--pitch-700); background: var(--pitch-100); padding: 3px 10px; border-radius: 999px; }
+.mb-total { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.mb-pts { font-size: 2.6rem; font-weight: 700; line-height: 1; color: var(--pitch-600); }
+.mb-split { display: flex; flex-direction: column; font-size: 0.82rem; font-weight: 600; }
+.mb-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.mb-stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 4px; text-align: center; }
+.mb-stat .num { display: block; font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; }
+.mb-stat label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.mb-custom { display: flex; flex-direction: column; margin-top: 12px; }
+.mb-bet { display: flex; align-items: center; gap: 10px; padding: 9px 2px; font-size: 0.84rem; }
+.mb-bet + .mb-bet { border-top: 1px solid var(--line-2); }
+.mb-bet-q { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.mb-bet-a { font-weight: 700; }
+.mb-bet-tag { font-size: 0.68rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+.mb-bet-tag.open { color: var(--upcoming); background: var(--upcoming-bg); }
+.mb-bet-tag.locked { color: var(--muted); background: var(--surface-2); }
+
 /* ============================================================
    keyframes
    ============================================================ */

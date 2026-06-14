@@ -154,15 +154,15 @@ export function createApiRouter(io) {
 
   // ── custom bets (pool-level prop bets) ──
   r.post('/pools/:code/custom-bets', resolvePool, requireHost, wrap((req, res) => {
-    const { question, options, points } = req.body || {};
-    const bet = createCustomBet({ poolId: req.pool.id, question, options, points });
+    const { question, options, points, locksAt } = req.body || {};
+    const bet = createCustomBet({ poolId: req.pool.id, question, options, points, locksAt });
     pushPoolUpdate(io, req.pool.id);
     res.status(201).json({ id: bet.id });
   }));
 
   r.patch('/pools/:code/custom-bets/:id', resolvePool, requireHost, wrap((req, res) => {
-    const { question, options, points, answer } = req.body || {};
-    updateCustomBet({ poolId: req.pool.id, betId: req.params.id, question, options, points, answer });
+    const { question, options, points, answer, locksAt } = req.body || {};
+    updateCustomBet({ poolId: req.pool.id, betId: req.params.id, question, options, points, answer, locksAt });
     pushPoolUpdate(io, req.pool.id);
     res.json({ ok: true });
   }));
