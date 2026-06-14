@@ -345,7 +345,7 @@ a { color: var(--pitch-600); }
 /* ============================================================
    Landing
    ============================================================ */
-.landing { max-width: 460px; margin: 0 auto; padding: 22px 18px 40px; }
+.landing { max-width: 460px; margin: 0 auto; padding: 22px 18px 40px; position: relative; z-index: 1; }
 .hero-mark { text-align: center; margin: 18px 0 26px; }
 .hero-mark .lg-ball { font-size: 3.4rem; display: inline-block; animation: float 4s ease-in-out infinite; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.16)); }
 .hero-mark h1 { font-size: 2.1rem; margin-top: 8px; }
@@ -360,6 +360,24 @@ a { color: var(--pitch-600); }
 .scoring-preview .sp .v { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; color: var(--pitch-600); }
 .scoring-preview .sp .l { font-size: 0.64rem; color: var(--muted); line-height: 1.25; margin-top: 2px; }
 .error-banner { background: var(--live-bg); color: #b23333; border: 1px solid #f6cccc; border-radius: var(--r-md); padding: 11px 13px; font-size: 0.88rem; font-weight: 500; margin-bottom: 14px; }
+
+/* ---------- live football backdrop (landing) ---------- */
+.pitch-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.pitch-lines {
+  position: absolute; top: 46%; left: 50%; width: min(80vw, 620px); height: min(80vw, 620px);
+  transform: translate(-50%, -50%); opacity: 0.22;
+}
+.pitch-circle { transform-origin: 300px 300px; animation: pitch-breathe 9s ease-in-out infinite; }
+.fb { position: absolute; top: 0; display: block; opacity: 0; will-change: transform, opacity; animation: ball-float var(--dur, 26s) linear var(--delay, 0s) infinite; }
+.fb svg { width: 100%; height: 100%; display: block; }
+@keyframes ball-float {
+  0% { transform: translate3d(0, 112vh, 0) rotate(0deg); opacity: 0; }
+  8% { opacity: var(--op, 0.1); }
+  90% { opacity: var(--op, 0.1); }
+  100% { transform: translate3d(var(--sway, 30px), -22vh, 0) rotate(var(--spin, 360deg)); opacity: 0; }
+}
+@keyframes pitch-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .pitch-bg { display: none; } }
 
 /* ---------- how it works ---------- */
 .howto { margin-top: 26px; }

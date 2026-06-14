@@ -1,6 +1,7 @@
 import { view, toast } from './lib/store.js';
 import { Landing } from './views/Landing.jsx';
 import { Pool } from './views/Pool.jsx';
+import { PitchBackground } from './components/PitchBackground.jsx';
 
 export function App() {
   return (
@@ -9,6 +10,7 @@ export function App() {
         <Pool />
       ) : (
         <div class="app">
+          <PitchBackground />
           <header class="appbar">
             <div class="appbar-inner">
               <div class="brand"><span class="ball">⚽</span><span><span class="u">U</span>Bet</span></div>
