@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { verifyPin } from './auth.js';
+import { verifyPin, signHostToken, verifyHostToken } from './auth.js';
+import { checkLimit, recordFail, recordSuccess } from './ratelimit.js';
 import { pushPoolUpdate } from './realtime.js';
 import { syncEnabled, activeProvider, runSync } from './sync.js';
 import {
@@ -13,6 +14,7 @@ import {
   clearResult,
   setMatchLock,
   setPlayerPaid,
+  removePlayer,
   updateSettings,
   createCustomBet,
   updateCustomBet,
@@ -50,10 +52,24 @@ export function createApiRouter(io) {
     next();
   };
 
+  const clientIp = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
+
+  // Verify a PIN with brute-force protection (lockout after repeated failures).
+  const verifyPinGated = (req) => {
+    const key = `${req.pool.id}:${clientIp(req)}`;
+    const { allowed, retryAfter } = checkLimit(key);
+    if (!allowed) throw httpError(429, `Too many attempts — try again in ${retryAfter}s`);
+    const ok = verifyPin(req.get('x-host-pin') || req.body?.pin, req.pool.pin_hash, req.pool.pin_salt);
+    if (ok) recordSuccess(key);
+    else recordFail(key);
+    return ok;
+  };
+
+  // Host actions accept a short-lived host token (preferred) or a PIN fallback.
   const requireHost = (req, _res, next) => {
-    const pin = req.get('x-host-pin');
-    if (!verifyPin(pin, req.pool.pin_hash, req.pool.pin_salt)) return next(httpError(403, 'Invalid host PIN'));
-    next();
+    if (verifyHostToken(req.pool.id, req.get('x-host-token'))) return next();
+    if (verifyPinGated(req)) return next();
+    next(httpError(403, 'Invalid or expired host session'));
   };
 
   // ── public ──
@@ -106,9 +122,11 @@ export function createApiRouter(io) {
     res.json(buildState(req.pool.id, viewerId));
   }));
 
-  r.post('/pools/:code/verify-pin', resolvePool, wrap((req, res) => {
-    const ok = verifyPin(req.body?.pin, req.pool.pin_hash, req.pool.pin_salt);
-    res.json({ ok });
+  // Exchange the PIN (once) for a short-lived host-session token. Rate-limited.
+  r.post('/pools/:code/host-session', resolvePool, wrap((req, res) => {
+    if (!verifyPinGated(req)) throw httpError(403, 'Invalid host PIN');
+    const { token, expiresAt } = signHostToken(req.pool.id);
+    res.json({ ok: true, hostToken: token, expiresAt });
   }));
 
   // ── player actions ──
@@ -141,6 +159,12 @@ export function createApiRouter(io) {
 
   r.post('/pools/:code/players/:id/paid', resolvePool, requireHost, wrap((req, res) => {
     setPlayerPaid(req.pool.id, req.params.id, !!req.body?.paid);
+    pushPoolUpdate(io, req.pool.id);
+    res.json({ ok: true });
+  }));
+
+  r.delete('/pools/:code/players/:id', resolvePool, requireHost, wrap((req, res) => {
+    removePlayer(req.pool.id, req.params.id);
     pushPoolUpdate(io, req.pool.id);
     res.json({ ok: true });
   }));

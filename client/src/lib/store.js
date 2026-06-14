@@ -12,7 +12,7 @@ function loadSession() {
   }
 }
 
-// { code, token, playerId, name, hostPin }  — hostPin present ⇒ host mode
+// { code, token, playerId, name, hostToken }  — hostToken present ⇒ host mode
 export const session = signal(loadSession());
 export const poolState = signal(null);
 export const myPreds = signal({});
@@ -20,11 +20,21 @@ export const connected = signal(false);
 export const toast = signal(null);
 
 export const view = computed(() => (session.value ? 'pool' : 'landing'));
-export const isHost = computed(() => !!session.value?.hostPin);
+export const isHost = computed(() => !!session.value?.hostToken);
 export const me = computed(() => session.value?.playerId || null);
 export const appConfig = signal(null);
 
 request('/config').then((c) => (appConfig.value = c)).catch(() => {});
+
+// Resume on another device: open a link with #resume=CODE.TOKEN (kept in the
+// fragment so the token never hits the server logs / referrer).
+function consumeResumeLink() {
+  const m = /[#&]resume=([A-Z0-9]+)\.([a-f0-9]+)/i.exec(location.hash || '');
+  if (!m) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  persist({ code: m[1].toUpperCase(), token: m[2] });
+  return true;
+}
 
 function persist(s) {
   session.value = s;
@@ -41,7 +51,19 @@ export function showToast(message, ms = 2400) {
 
 let socket = null;
 
+// If the host kicked us, our id drops out of the roster → eject locally.
+function detectRemoval(state) {
+  const s = session.value;
+  if (s?.playerId && Array.isArray(state.players) && !state.players.some((p) => p.id === s.playerId)) {
+    showToast('You were removed from this pool');
+    leavePool();
+    return true;
+  }
+  return false;
+}
+
 function mergeShared(shared) {
+  if (detectRemoval(shared)) return;
   poolState.value = shared;
   const myId = session.value?.playerId;
   if (myId && shared.revealed) {
@@ -65,14 +87,41 @@ export function connectSocket() {
   });
   socket.on('disconnect', () => (connected.value = false));
   socket.on('pool:state', (state) => {
+    if (detectRemoval(state)) return;
     poolState.value = state;
     myPreds.value = state.myPredictions || {};
+    syncIdentity(state);
   });
   socket.on('pool:sync', mergeShared);
   socket.on('pool:error', (e) => showToast(e.message || 'Connection error'));
 }
 
-// auto-connect on load if we have a session
+// Fill playerId/name from the server's view of who we are (powers resume links).
+function syncIdentity(state) {
+  const s = session.value;
+  if (!s || !state?.you) return;
+  if (s.playerId !== state.you || !s.name) {
+    const meRow = (state.players || []).find((p) => p.id === state.you);
+    persist({ ...s, playerId: state.you, name: meRow?.name || s.name });
+  }
+}
+
+// Wraps a host action: clears the host session on expiry so the UI re-prompts.
+async function hostRequest(path, opts = {}) {
+  const s = session.value;
+  try {
+    return await request(path, { ...opts, hostToken: s?.hostToken });
+  } catch (e) {
+    if (e.status === 403) {
+      persist({ ...session.value, hostToken: undefined });
+      showToast('Host session expired — tap 🔑 Host to re-enter your PIN');
+    }
+    throw e;
+  }
+}
+
+// auto-connect on load (consuming a resume link first if present)
+consumeResumeLink();
 if (session.value) connectSocket();
 
 async function refreshState() {
@@ -82,9 +131,22 @@ async function refreshState() {
     const state = await request(`/pools/${s.code}/state`, { token: s.token });
     poolState.value = state;
     myPreds.value = state.myPredictions || {};
+    syncIdentity(state);
   } catch (e) {
-    showToast(e.message);
+    if (e.status === 401 || e.status === 404) {
+      showToast('You were removed from this pool');
+      leavePool();
+    } else {
+      showToast(e.message);
+    }
   }
+}
+
+// Build a resume link a player can open on another device.
+export function resumeLink() {
+  const s = session.value;
+  if (!s) return '';
+  return `${location.origin}/#resume=${s.code}.${s.token}`;
 }
 
 // ── actions ──
@@ -101,13 +163,9 @@ export async function createPool(form) {
       manual: form.manual,
     },
   });
-  persist({
-    code: res.pool.code,
-    token: res.token,
-    playerId: res.playerId,
-    name: form.hostName,
-    hostPin: form.pin,
-  });
+  persist({ code: res.pool.code, token: res.token, playerId: res.playerId, name: form.hostName });
+  // exchange the PIN for a short-lived host token (don't keep the raw PIN around)
+  await unlockHost(form.pin);
   connectSocket();
   await refreshState();
   return res.pool.code;
@@ -135,56 +193,61 @@ export async function predict(num, home, away) {
   myPreds.value = { ...myPreds.value, [num]: { home: res.home, away: res.away, points: res.points } };
 }
 
-export async function verifyHostPin(pin) {
+// Verify the PIN once, get back a short-lived host-session token.
+export async function unlockHost(pin) {
   const s = session.value;
-  const res = await request(`/pools/${s.code}/verify-pin`, { method: 'POST', body: { pin } });
-  if (res.ok) {
-    persist({ ...s, hostPin: pin });
-    showToast('Host controls unlocked 🔑');
+  try {
+    const res = await request(`/pools/${s.code}/host-session`, { method: 'POST', body: { pin } });
+    persist({ ...session.value, hostToken: res.hostToken });
     return true;
+  } catch (e) {
+    if (e.status === 429) showToast(e.message);
+    return false;
   }
-  return false;
 }
 
 export async function enterResult(num, homeScore, awayScore, penWinner) {
   const s = session.value;
-  await request(`/pools/${s.code}/results`, {
-    method: 'POST', pin: s.hostPin, body: { num, homeScore, awayScore, penWinner },
-  });
+  await hostRequest(`/pools/${s.code}/results`, { method: 'POST', body: { num, homeScore, awayScore, penWinner } });
 }
 
 export async function clearResult(num) {
   const s = session.value;
-  await request(`/pools/${s.code}/results/${num}`, { method: 'DELETE', pin: s.hostPin });
+  await hostRequest(`/pools/${s.code}/results/${num}`, { method: 'DELETE' });
 }
 
 export async function toggleLock(num, locked) {
   const s = session.value;
-  await request(`/pools/${s.code}/matches/${num}/lock`, { method: 'POST', pin: s.hostPin, body: { locked } });
+  await hostRequest(`/pools/${s.code}/matches/${num}/lock`, { method: 'POST', body: { locked } });
 }
 
 export async function togglePaid(playerId, paid) {
   const s = session.value;
-  await request(`/pools/${s.code}/players/${playerId}/paid`, { method: 'POST', pin: s.hostPin, body: { paid } });
+  await hostRequest(`/pools/${s.code}/players/${playerId}/paid`, { method: 'POST', body: { paid } });
+}
+
+export async function kickPlayer(playerId) {
+  const s = session.value;
+  await hostRequest(`/pools/${s.code}/players/${playerId}`, { method: 'DELETE' });
 }
 
 export async function updateSettings(patch) {
   const s = session.value;
-  await request(`/pools/${s.code}/settings`, { method: 'PATCH', pin: s.hostPin, body: patch });
+  await hostRequest(`/pools/${s.code}/settings`, { method: 'PATCH', body: patch });
 }
 
 // ── custom bets ──
 export async function createCustomBet(bet) {
   const s = session.value;
-  await request(`/pools/${s.code}/custom-bets`, { method: 'POST', pin: s.hostPin, body: bet });
+  await hostRequest(`/pools/${s.code}/custom-bets`, { method: 'POST', body: bet });
 }
 export async function editCustomBet(id, patch) {
   const s = session.value;
-  await request(`/pools/${s.code}/custom-bets/${id}`, { method: 'PATCH', pin: s.hostPin, body: patch });
+  await hostRequest(`/pools/${s.code}/custom-bets/${id}`, { method: 'PATCH', body: patch });
 }
 export async function deleteCustomBet(id) {
   const s = session.value;
-  await request(`/pools/${s.code}/custom-bets/${id}`, { method: 'DELETE', pin: s.hostPin });
+  await hostRequest(`/pools/${s.code}/custom-bets/${id}`, { method: 'DELETE' });
 }
 export async function answerCustomBet(id, answer) {
   const s = session.value;

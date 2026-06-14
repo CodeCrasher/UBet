@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { poolState, verifyHostPin, updateSettings, showToast } from '../lib/store.js';
+import { poolState, unlockHost, updateSettings, showToast } from '../lib/store.js';
 
 export function Modal({ title, sub, onClose, children }) {
   return (
@@ -23,7 +23,7 @@ export function HostPinModal({ onClose }) {
     setBusy(true);
     setErr('');
     try {
-      const ok = await verifyHostPin(pin);
+      const ok = await unlockHost(pin);
       if (ok) onClose();
       else setErr('That PIN is incorrect.');
     } catch (e2) {

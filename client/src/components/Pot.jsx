@@ -1,4 +1,4 @@
-import { poolState, isHost, togglePaid, showToast } from '../lib/store.js';
+import { poolState, isHost, togglePaid, kickPlayer, showToast } from '../lib/store.js';
 import { CountUp } from './CountUp.jsx';
 import { initials, colorFor, money } from '../lib/helpers.js';
 
@@ -61,11 +61,21 @@ export function Contributors() {
   const state = poolState.value;
   if (!state) return null;
   const host = isHost.value;
+  const hostIds = new Set((state.players || []).filter((p) => p.isHost).map((p) => p.id));
 
   async function flip(c) {
     if (!host) return;
     try {
       await togglePaid(c.playerId, !c.paid);
+    } catch (e) {
+      showToast(e.message);
+    }
+  }
+  async function kick(c) {
+    if (!confirm(`Remove ${c.name} from the pool? Their picks are deleted too.`)) return;
+    try {
+      await kickPlayer(c.playerId);
+      showToast(`${c.name} removed`);
     } catch (e) {
       showToast(e.message);
     }
@@ -81,7 +91,7 @@ export function Contributors() {
         {state.pot.contributors.map((c) => (
           <div class="contrib" key={c.playerId}>
             <span class="av" style={{ background: colorFor(c.playerId) }}>{initials(c.name)}</span>
-            <span class="c-name">{c.name}</span>
+            <span class="c-name">{c.name}{hostIds.has(c.playerId) ? ' 🛠' : ''}</span>
             <button
               class={`paytag ${c.paid ? 'paid' : 'unpaid'} ${host ? 'toggle' : ''}`}
               onClick={() => flip(c)}
@@ -89,6 +99,9 @@ export function Contributors() {
             >
               {c.paid ? '✓ Paid' : 'Unpaid'}
             </button>
+            {host && !hostIds.has(c.playerId) ? (
+              <button class="btn-icon kick" title={`Remove ${c.name}`} onClick={() => kick(c)}>✕</button>
+            ) : null}
           </div>
         ))}
       </div>

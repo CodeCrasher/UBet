@@ -77,6 +77,24 @@ test('custom bets: answer, settle, and award points', () => {
   assert.throws(() => pools.answerCustomBet({ poolId: pool.id, betId: bet.id, playerId: bob.id, answer: 'Haaland' }), /settled/i);
 });
 
+test('kicking a player removes them and their picks', () => {
+  const { pool, host } = pools.createPool({ name: 'Kick', buyIn: 0, currency: 'USD', pin: '1', hostName: 'H' });
+  const bob = pools.addPlayer({ poolId: pool.id, displayName: 'Bob' });
+  pools.submitPrediction({ poolId: pool.id, playerId: bob.id, num: 1, home: 1, away: 0, force: true });
+
+  let state = pools.buildState(pool.id);
+  assert.ok(state.players.some((p) => p.id === bob.id), 'Bob is in the pool');
+  assert.ok((state.revealed[1] || []).some((r) => r.playerId === bob.id), 'Bob has a pick');
+
+  pools.removePlayer(pool.id, bob.id);
+  state = pools.buildState(pool.id);
+  assert.ok(!state.players.some((p) => p.id === bob.id), 'Bob is gone');
+  assert.ok(!(state.revealed[1] || []).some((r) => r.playerId === bob.id), 'his pick is gone too');
+
+  // the host can't be removed
+  assert.throws(() => pools.removePlayer(pool.id, host.id), /host/i);
+});
+
 test('custom bet closes at its deadline', () => {
   const { pool, host } = pools.createPool({ name: 'DL', buyIn: 0, currency: 'USD', pin: '1', hostName: 'H' });
   const past = new Date(Date.now() - 60_000).toISOString();

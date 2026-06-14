@@ -464,6 +464,8 @@ a { color: var(--pitch-600); }
 .settle-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .btn-icon.del { background: transparent; border-color: transparent; font-size: 0.95rem; opacity: 0.6; }
 .btn-icon.del:hover { opacity: 1; background: var(--live-bg); }
+.btn-icon.kick { background: transparent; border-color: transparent; color: var(--faint); font-size: 0.82rem; padding: 6px 9px; flex: 0 0 auto; }
+.btn-icon.kick:hover { color: var(--live); background: var(--live-bg); }
 
 .deadline-field { display: flex; flex-direction: column; gap: 5px; }
 .deadline-field > span { font-size: 0.76rem; font-weight: 600; color: var(--ink-2); }

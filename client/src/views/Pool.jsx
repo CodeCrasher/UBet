@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { poolState, connected, isHost, session, leavePool, showToast } from '../lib/store.js';
+import { poolState, connected, isHost, session, leavePool, showToast, resumeLink } from '../lib/store.js';
 import { Pot, Contributors } from '../components/Pot.jsx';
 import { Leaderboard } from '../components/Leaderboard.jsx';
 import { Matches } from '../components/Matches.jsx';
@@ -22,6 +22,14 @@ export function Pool() {
     );
   }
 
+  function copyDeviceLink() {
+    const link = resumeLink();
+    navigator.clipboard?.writeText(link).then(
+      () => showToast('Device link copied — open it on another device to resume'),
+      () => showToast(link),
+    );
+  }
+
   return (
     <div class="app">
       <header class="appbar">
@@ -34,6 +42,7 @@ export function Pool() {
           </button>
           <span class="grow" />
           <span class={`conn-dot ${connected.value ? 'on' : ''}`} title={connected.value ? 'Live' : 'Reconnecting…'} />
+          <button class="btn-icon" title="Copy my device link (resume on another device)" onClick={copyDeviceLink}>🔗</button>
           {host ? (
             <button class="btn-icon" title="Pool settings" onClick={() => setModal('settings')}>⚙️</button>
           ) : (

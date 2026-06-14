@@ -23,7 +23,9 @@ Preact single-page app served from the same process.
 
 - **Pools / rooms** — a host creates a pool and gets a 6-character room code. Players
   join with the code + a display name. Host actions (entering results, locking
-  matches, editing settings, toggling buy-ins) are **PIN-gated**.
+  matches, editing settings, toggling buy-ins, removing players) are **PIN-gated**
+  (rate-limited, exchanged for a short-lived host session). Players can **resume on
+  another device** via a personal link.
 - **Matches view** — card-based fixtures grouped by matchday / knockout round, with
   kickoff time, teams, status (upcoming / live / final) and your prediction.
   Predictions lock automatically at kickoff.
@@ -102,6 +104,8 @@ runs with no `.env` at all.
 | `NODE_ENV`         | `development`      | `production` enables static SPA serving + gzip. |
 | `DATABASE_PATH`    | `./data/ubet.db`   | SQLite file location. Point at a mounted volume in prod. |
 | `CORS_ORIGIN`      | `*`                | Comma-separated allowed origins, or `*`. |
+| `SESSION_SECRET`   | _(per-boot random)_ | Signs host-session tokens. Set in prod so host sessions survive restarts. |
+| `HOST_SESSION_TTL_MS` | `28800000` (8h) | How long a host stays unlocked before re-entering the PIN. |
 | `DEFAULT_BUY_IN`   | `20`               | Buy-in pre-filled when a host creates a pool. |
 | `DEFAULT_CURRENCY` | `USD`              | Currency pre-filled when a host creates a pool. |
 | `SYNC_PROVIDER`    | _(empty)_          | `thesportsdb` or `footballdata` to pull real fixtures + live results (see below). Empty = committed snapshot + manual results. |
@@ -296,10 +300,14 @@ These were judgment calls — flagged here rather than blocking:
 - **"Head-to-head" tie-break.** In a prediction pool players don't play each other, so
   a literal H2H tie-break isn't meaningful. Ties are broken by **exact-score count →
   correct-result count → join order**, which rewards prediction accuracy.
-- **Auth is lightweight by design.** A private friends-pool, not a bank: players hold an
-  opaque token (localStorage); host actions are gated by a per-pool PIN (scrypt-hashed).
-  There's no email/password or rate-limiting — add a reverse proxy / auth layer if you
-  expose it widely.
+- **Sessions are token-based, no accounts.** Players hold an opaque token (localStorage);
+  the host verifies a per-pool **PIN** (scrypt-hashed) once and gets a **short-lived,
+  signed host-session token** — the raw PIN isn't kept or resent. PIN checks are
+  **rate-limited with lockout** (brute-force protection), responses carry security headers
+  + a tuned CSP, the host can **kick/revoke** a player, and a **resume link**
+  (`#resume=CODE.TOKEN`, kept in the URL fragment) lets a player continue on another
+  device. There's still no email/password — fine for a private friends pool; add an
+  external auth layer if you expose it widely.
 - **Per-pool results (manual mode).** With no provider configured, each pool's host enters
   results for their own pool, so pools are fully self-contained (no global admin role).
   With `SYNC_PROVIDER` set, synced pools instead auto-score from the live feed.

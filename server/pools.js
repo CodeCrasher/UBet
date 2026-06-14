@@ -38,6 +38,7 @@ const stmt = {
   playerById: db.prepare('SELECT * FROM players WHERE id = ?'),
   countPlayers: db.prepare('SELECT COUNT(*) AS n FROM players WHERE pool_id = ?'),
   setPaid: db.prepare('UPDATE players SET paid = @paid WHERE id = @id'),
+  deletePlayer: db.prepare('DELETE FROM players WHERE id = ?'),
   predsByPool: db.prepare('SELECT * FROM predictions WHERE pool_id = ?'),
   predsByPlayer: db.prepare('SELECT * FROM predictions WHERE player_id = ?'),
   predsByMatch: db.prepare('SELECT * FROM predictions WHERE match_id = ?'),
@@ -253,6 +254,15 @@ export function setPlayerPaid(poolId, playerId, paid) {
   if (!player || player.pool_id !== poolId) throw httpError(404, 'Player not found');
   stmt.setPaid.run({ id: playerId, paid: paid ? 1 : 0 });
   return stmt.playerById.get(playerId);
+}
+
+// Kick a player: deletes the row, which cascades to their predictions and
+// custom answers (FK ON DELETE CASCADE) and invalidates their token.
+export function removePlayer(poolId, playerId) {
+  const player = stmt.playerById.get(playerId);
+  if (!player || player.pool_id !== poolId) throw httpError(404, 'Player not found');
+  if (player.is_host) throw httpError(400, 'The host cannot be removed');
+  stmt.deletePlayer.run(playerId);
 }
 
 // ── predictions ──
@@ -641,6 +651,7 @@ export function buildState(poolId, viewerId = null) {
     revealed,
     customBets,
     myCustomAnswers,
+    you: viewerId,
     serverTime: now(),
   };
 }
