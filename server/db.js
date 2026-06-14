@@ -14,6 +14,27 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 db.pragma('busy_timeout = 5000');
 
+// One-time migration off the pre-pivot schema: the old per-room model had a
+// `pools` table with a totally different shape. If an existing volume DB still
+// has it, drop the obsolete tables so the new schema can be created cleanly.
+// (Detected by the absence of the new `type` column on `pools`.)
+const legacyPools = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='pools'").get();
+if (legacyPools) {
+  const cols = db.prepare('PRAGMA table_info(pools)').all();
+  if (!cols.some((c) => c.name === 'type')) {
+    db.pragma('foreign_keys = OFF');
+    db.exec(`
+      DROP TABLE IF EXISTS predictions;
+      DROP TABLE IF EXISTS custom_answers;
+      DROP TABLE IF EXISTS custom_bets;
+      DROP TABLE IF EXISTS players;
+      DROP TABLE IF EXISTS matches;
+      DROP TABLE IF EXISTS pools;
+    `);
+    db.pragma('foreign_keys = ON');
+  }
+}
+
 // All money is whole Rs (INTEGER). One global tournament; pre-seeded pools.
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
