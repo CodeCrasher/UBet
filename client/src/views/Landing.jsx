@@ -25,15 +25,15 @@ export function Landing() {
 const STEPS = [
   { ic: '🔑', t: 'Join the pool', d: 'Drop in the room code your host shares, pick a display name — you’re in.' },
   { ic: '🎯', t: 'Call the score', d: 'Tap the exact scoreline for each match. Edit freely right up until kickoff.' },
-  { ic: '⚡', t: 'Bank points', d: 'The closer your guess, the more you score. The board updates live as results land.' },
+  { ic: '⚡', t: 'Bank points', d: 'Markets stack — result, exact, goal-diff and over/under all score. Plus host custom bets.' },
   { ic: '🏆', t: 'Take the pot', d: 'Top the leaderboard when the final whistle blows — winner takes the pot.' },
 ];
 
 const SCORING = [
   { v: '5', l: 'Exact score' },
-  { v: '3', l: 'Right margin' },
-  { v: '1', l: 'Right result' },
-  { v: '0', l: 'Off target' },
+  { v: '3', l: 'Correct result' },
+  { v: '2', l: 'Goal difference' },
+  { v: '2', l: 'Over / Under' },
 ];
 
 function HowItWorks() {
@@ -121,7 +121,7 @@ function CreateForm() {
     currency: 'USD',
     pin: '',
     manual: false,
-    rules: { exact: 5, resultGd: 3, result: 1, knockoutMultiplier: 2 },
+    rules: { result: 3, exact: 5, goalDiff: 2, overUnder: 2, knockoutMultiplier: 2 },
   });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -182,11 +182,11 @@ function CreateForm() {
       <label class="section-title" style="display:block;margin:4px 0 8px">Scoring</label>
       <div class="scoring-preview">
         <div class="sp"><div class="v num">{form.rules.exact}</div><div class="l">Exact score</div></div>
-        <div class="sp"><div class="v num">{form.rules.resultGd}</div><div class="l">Result + GD</div></div>
-        <div class="sp"><div class="v num">{form.rules.result}</div><div class="l">Result only</div></div>
-        <div class="sp"><div class="v num">×{form.rules.knockoutMultiplier}</div><div class="l">KO rounds</div></div>
+        <div class="sp"><div class="v num">{form.rules.result}</div><div class="l">Correct result</div></div>
+        <div class="sp"><div class="v num">{form.rules.goalDiff}</div><div class="l">Goal diff</div></div>
+        <div class="sp"><div class="v num">{form.rules.overUnder}</div><div class="l">Over / Under</div></div>
       </div>
-      <p class="hint" style="margin:2px 0 14px">Defaults are sensible — you can fine-tune scoring anytime in settings.</p>
+      <p class="hint" style="margin:2px 0 14px">Markets stack additively · knockouts ×{form.rules.knockoutMultiplier} · add custom bets later. Fine-tune anytime in settings.</p>
       {sync?.enabled ? (
         <label class="checkbox-row">
           <input type="checkbox" checked={form.manual} onInput={(e) => up('manual', e.target.checked)} />

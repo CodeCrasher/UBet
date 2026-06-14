@@ -48,17 +48,34 @@ const stmt = {
   updatePredPoints: db.prepare('UPDATE predictions SET points = @points WHERE id = @id'),
   setPoolStatus: db.prepare('UPDATE pools SET status = @status WHERE id = @id'),
   updatePoolSettings: db.prepare('UPDATE pools SET name = @name, buy_in = @buy_in, currency = @currency, rules = @rules WHERE id = @id'),
+  // custom bets
+  insertCustomBet: db.prepare(`INSERT INTO custom_bets (id, pool_id, question, options, points, answer, created_at)
+    VALUES (@id, @pool_id, @question, @options, @points, NULL, @created_at)`),
+  customBetsByPool: db.prepare('SELECT * FROM custom_bets WHERE pool_id = ? ORDER BY created_at'),
+  customBetById: db.prepare('SELECT * FROM custom_bets WHERE id = ?'),
+  updateCustomBet: db.prepare('UPDATE custom_bets SET question=@question, options=@options, points=@points, answer=@answer WHERE id=@id'),
+  deleteCustomBet: db.prepare('DELETE FROM custom_bets WHERE id = ?'),
+  answersByPool: db.prepare('SELECT * FROM custom_answers WHERE pool_id = ?'),
+  upsertCustomAnswer: db.prepare(`INSERT INTO custom_answers (id, pool_id, bet_id, player_id, answer, updated_at)
+    VALUES (@id, @pool_id, @bet_id, @player_id, @answer, @updated_at)
+    ON CONFLICT(bet_id, player_id) DO UPDATE SET answer=@answer, updated_at=@updated_at`),
 };
 
 const now = () => new Date().toISOString();
 
 function parseRules(pool) {
-  return { ...DEFAULT_RULES, ...JSON.parse(pool.rules) };
+  const stored = JSON.parse(pool.rules);
+  // Migrate the legacy single-tier scheme ({exact, resultGd, result}) to the
+  // additive market scheme, preserving any custom knockout multiplier.
+  if ('resultGd' in stored) {
+    return { ...DEFAULT_RULES, knockoutMultiplier: Number(stored.knockoutMultiplier) || DEFAULT_RULES.knockoutMultiplier };
+  }
+  return { ...DEFAULT_RULES, ...sanitizeRules(stored) };
 }
 
 function sanitizeRules(input = {}) {
   const r = { ...DEFAULT_RULES };
-  for (const k of ['exact', 'resultGd', 'result', 'knockoutMultiplier']) {
+  for (const k of ['result', 'exact', 'goalDiff', 'overUnder', 'ouLine', 'knockoutMultiplier']) {
     if (input[k] != null && Number.isFinite(Number(input[k]))) {
       r[k] = Math.max(0, Number(input[k]));
     }
@@ -365,6 +382,72 @@ export function updateSettings({ poolId, name, buyIn, currency, rules }) {
   return getPoolById(poolId);
 }
 
+// ── custom bets (pool-level prop bets) ──
+function parseOptions(options) {
+  let arr = null;
+  if (Array.isArray(options)) arr = options;
+  else if (typeof options === 'string' && options.trim()) arr = options.split(',');
+  if (!arr) return null;
+  const clean = arr.map((o) => String(o).trim()).filter(Boolean);
+  return clean.length >= 2 ? clean : null; // <2 options ⇒ free-text answer
+}
+
+export function createCustomBet({ poolId, question, options, points }) {
+  const q = String(question || '').trim();
+  if (!q) throw httpError(400, 'Bet question is required');
+  const opts = parseOptions(options);
+  const id = nanoid(12);
+  stmt.insertCustomBet.run({
+    id, pool_id: poolId, question: q.slice(0, 140),
+    options: opts ? JSON.stringify(opts) : null,
+    points: Math.max(0, Math.min(50, Number(points) || 0)),
+    created_at: now(),
+  });
+  return stmt.customBetById.get(id);
+}
+
+export function updateCustomBet({ poolId, betId, question, options, points, answer }) {
+  const bet = stmt.customBetById.get(betId);
+  if (!bet || bet.pool_id !== poolId) throw httpError(404, 'Bet not found');
+  let opts = bet.options;
+  if (options !== undefined) {
+    const parsed = parseOptions(options);
+    opts = parsed ? JSON.stringify(parsed) : null;
+  }
+  let ans = bet.answer;
+  if (answer !== undefined) ans = answer == null || String(answer).trim() === '' ? null : String(answer).trim();
+  stmt.updateCustomBet.run({
+    id: betId,
+    question: question !== undefined ? String(question).trim().slice(0, 140) || bet.question : bet.question,
+    options: opts,
+    points: points !== undefined ? Math.max(0, Math.min(50, Number(points) || 0)) : bet.points,
+    answer: ans,
+  });
+  return stmt.customBetById.get(betId);
+}
+
+export function deleteCustomBet({ poolId, betId }) {
+  const bet = stmt.customBetById.get(betId);
+  if (!bet || bet.pool_id !== poolId) throw httpError(404, 'Bet not found');
+  stmt.deleteCustomBet.run(betId);
+}
+
+export function answerCustomBet({ poolId, betId, playerId, answer }) {
+  const bet = stmt.customBetById.get(betId);
+  if (!bet || bet.pool_id !== poolId) throw httpError(404, 'Bet not found');
+  if (bet.answer != null) throw httpError(409, 'This bet is already settled');
+  const a = String(answer || '').trim();
+  if (!a) throw httpError(400, 'Pick an answer');
+  if (bet.options) {
+    const opts = JSON.parse(bet.options);
+    if (!opts.some((o) => o.toLowerCase() === a.toLowerCase())) throw httpError(400, 'Choose one of the listed options');
+  }
+  stmt.upsertCustomAnswer.run({
+    id: nanoid(12), pool_id: poolId, bet_id: betId, player_id: playerId, answer: a.slice(0, 80), updated_at: now(),
+  });
+  return stmt.customBetById.get(betId);
+}
+
 // Winner/loser of a finished match (penalties break knockout draws).
 function winnerOf(m) {
   if (m.status !== 'final' || m.home == null || m.away == null) return null;
@@ -468,31 +551,49 @@ export function buildState(poolId, viewerId = null) {
       locked: ls.locked,
     };
   });
-  const lockedNums = new Set(matches.filter((m) => m.locked).map((m) => m.num));
   const numById = new Map(rawMatches.map((m) => [m.id, m.num]));
 
-  // viewer's own predictions (all matches)
+  // viewer's own predictions (all matches) + the running-bets feed.
+  // Picks are fully open: everyone sees everyone's predictions for every match.
   const myPredictions = {};
-  // revealed predictions for locked matches (everyone can see post-lock)
   const revealed = {};
   for (const p of predictions) {
     const num = numById.get(p.match_id);
     if (viewerId && p.player_id === viewerId) {
       myPredictions[num] = { home: p.home_pred, away: p.away_pred, points: p.points };
     }
-    if (lockedNums.has(num)) {
-      (revealed[num] ||= []).push({
-        playerId: p.player_id,
-        home: p.home_pred,
-        away: p.away_pred,
-        points: p.points,
-      });
-    }
+    (revealed[num] ||= []).push({
+      playerId: p.player_id,
+      home: p.home_pred,
+      away: p.away_pred,
+      points: p.points,
+    });
   }
+
+  // custom (pool-level) bets + everyone's answers, plus per-player custom points
+  const betRows = stmt.customBetsByPool.all(poolId);
+  const answerRows = stmt.answersByPool.all(poolId);
+  const customPoints = computeCustomPoints(betRows, answerRows);
+  const answersByBet = new Map();
+  for (const a of answerRows) {
+    if (!answersByBet.has(a.bet_id)) answersByBet.set(a.bet_id, []);
+    answersByBet.get(a.bet_id).push({ playerId: a.player_id, answer: a.answer });
+  }
+  const customBets = betRows.map((b) => ({
+    id: b.id,
+    question: b.question,
+    options: b.options ? JSON.parse(b.options) : null,
+    points: b.points,
+    answer: b.answer,
+    status: b.answer != null ? 'settled' : 'open',
+    answers: answersByBet.get(b.id) || [],
+  }));
+  const myCustomAnswers = {};
+  if (viewerId) for (const a of answerRows) if (a.player_id === viewerId) myCustomAnswers[a.bet_id] = a.answer;
 
   const leaderboard = buildLeaderboard(players, predictions, rawMatches.map((m) => ({
     id: m.id, stage: m.stage, status: m.status, home_score: m.home_score, away_score: m.away_score,
-  })), rules);
+  })), rules, customPoints);
 
   const pot = buildPot(pool, players, leaderboard);
 
@@ -521,8 +622,29 @@ export function buildState(poolId, viewerId = null) {
     pot,
     myPredictions,
     revealed,
+    customBets,
+    myCustomAnswers,
     serverTime: now(),
   };
+}
+
+function computeCustomPoints(bets, answers) {
+  const byPlayer = {};
+  const ansByBet = new Map();
+  for (const a of answers) {
+    if (!ansByBet.has(a.bet_id)) ansByBet.set(a.bet_id, []);
+    ansByBet.get(a.bet_id).push(a);
+  }
+  for (const bet of bets) {
+    if (bet.answer == null) continue;
+    const win = String(bet.answer).trim().toLowerCase();
+    for (const a of ansByBet.get(bet.id) || []) {
+      if (String(a.answer).trim().toLowerCase() === win) {
+        byPlayer[a.player_id] = (byPlayer[a.player_id] || 0) + bet.points;
+      }
+    }
+  }
+  return byPlayer;
 }
 
 function buildPot(pool, players, leaderboard) {

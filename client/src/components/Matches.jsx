@@ -4,7 +4,7 @@ import {
   predict, enterResult, clearResult, toggleLock, showToast,
 } from '../lib/store.js';
 import {
-  teamMap, fmtKickoff, ROUND_ORDER, defaultRoundKey, pointsClass,
+  teamMap, fmtKickoff, ROUND_ORDER, defaultRoundKey, pointsClass, scoreBreakdown, breakdownChips,
 } from '../lib/helpers.js';
 
 export function Matches() {
@@ -106,12 +106,15 @@ function MatchCard({ match, tmap }) {
         <div class="pen-note">{tmap.get(match.penWinner)?.name} win on penalties</div>
       ) : null}
 
-      {/* prediction area */}
+      {/* your prediction */}
       {!match.locked && resolved ? (
         <Predictor num={match.num} myPred={myPred} />
       ) : (
-        <LockedPick match={match} myPred={myPred} />
+        <YourPick match={match} myPred={myPred} />
       )}
+
+      {/* running bets — everyone's picks (fully open) */}
+      <MatchPicks match={match} />
 
       {host && resolved && !synced ? <HostEntry match={match} /> : null}
       {host && synced && match.status !== 'final' ? (
@@ -179,16 +182,11 @@ function Predictor({ num, myPred }) {
   );
 }
 
-function LockedPick({ match, myPred }) {
-  const state = poolState.value;
-  const myId = me.value;
-  const [open, setOpen] = useState(false);
-  const revealed = state.revealed?.[match.num] || [];
-  const nameById = new Map((state.players || []).map((p) => [p.id, p.name]));
-  const others = revealed
-    .filter((r) => r.playerId !== myId)
-    .sort((x, y) => y.points - x.points);
-
+function YourPick({ match, myPred }) {
+  const rules = poolState.value?.pool?.rules || {};
+  const isFinal = match.status === 'final';
+  const bd = scoreBreakdown(myPred, match, rules);
+  const chips = isFinal && myPred ? breakdownChips(bd) : [];
   return (
     <div class="your-pick-wrap">
       <div class="your-pick">
@@ -197,30 +195,53 @@ function LockedPick({ match, myPred }) {
         ) : (
           <span class="pk faint">No prediction made</span>
         )}
-        {match.status === 'final' && myPred ? (
-          <span class={`pts-badge ${pointsClass(myPred.points)}`}>
-            {myPred.points > 0 ? `+${myPred.points} pts` : '0 pts'}
-          </span>
+        {isFinal && myPred ? (
+          <span class={`pts-badge ${pointsClass(myPred.points)}`}>{myPred.points > 0 ? `+${myPred.points} pts` : '0 pts'}</span>
         ) : (
           <span class="lock-note">🔒 Locked</span>
         )}
       </div>
-      {others.length ? (
-        <>
-          <button class="reveal-toggle" onClick={() => setOpen(!open)}>
-            {open ? 'Hide' : `See ${others.length} other pick${others.length === 1 ? '' : 's'}`}
-          </button>
-          {open ? (
-            <div class="reveal-list">
-              {others.map((r) => (
-                <div class="reveal-item" key={r.playerId}>
-                  <span>{nameById.get(r.playerId) || 'Player'}</span>
-                  <span class="num">{r.home}–{r.away}{match.status === 'final' ? ` · ${r.points}pts` : ''}</span>
-                </div>
-              ))}
+      {chips.length || (isFinal && myPred && bd.multiplier > 1) ? (
+        <div class="bd-chips">
+          {chips.map(([l, v]) => <span class="bd-chip" key={l}>{l} +{v}</span>)}
+          {bd.multiplier > 1 ? <span class="bd-chip ko">×{bd.multiplier} KO</span> : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// Running bets: everyone's picks for this match (fully open).
+function MatchPicks({ match }) {
+  const state = poolState.value;
+  const myId = me.value;
+  const [open, setOpen] = useState(false);
+  const picks = state.revealed?.[match.num] || [];
+  if (!picks.length) return null;
+  const nameById = new Map((state.players || []).map((p) => [p.id, p.name]));
+  const isFinal = match.status === 'final';
+  const sorted = [...picks].sort(
+    (a, b) => (isFinal ? b.points - a.points : 0) ||
+      (nameById.get(a.playerId) || '').localeCompare(nameById.get(b.playerId) || ''),
+  );
+  return (
+    <div class="picks">
+      <button class="picks-toggle" onClick={() => setOpen(!open)}>
+        <span>🎲 {picks.length} pick{picks.length === 1 ? '' : 's'} placed</span>
+        <span class="chev">{open ? 'Hide' : 'Show'}</span>
+      </button>
+      {open ? (
+        <div class="picks-list">
+          {sorted.map((r) => (
+            <div class={`pick-row ${r.playerId === myId ? 'mine' : ''}`} key={r.playerId}>
+              <span class="pk-name">{nameById.get(r.playerId) || 'Player'}{r.playerId === myId ? ' · you' : ''}</span>
+              <span class="pk-score num">{r.home}–{r.away}</span>
+              {isFinal
+                ? <span class={`pts-badge ${pointsClass(r.points)}`}>{r.points > 0 ? `+${r.points}` : '0'}</span>
+                : <span class="pk-pending">in play</span>}
             </div>
-          ) : null}
-        </>
+          ))}
+        </div>
       ) : null}
     </div>
   );

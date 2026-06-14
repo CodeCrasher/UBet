@@ -74,12 +74,13 @@ test('create → join → predict → result → live leaderboard + pot', async 
   ]);
   await expect(hCard).toContainText('Final');
 
-  // ── Bob's exact 2–1 prediction = 5 points, live on both clients ──
+  // ── Bob's exact 2–1 prediction = 10 points (exact 5 + result 3 + over/under 2),
+  //    live on both clients ──
   await showLeaderboard(host);
-  await expect(host.locator('.lb-row', { hasText: 'Bob' })).toContainText('5');
+  await expect(host.locator('.lb-row', { hasText: 'Bob' }).locator('.lb-pts .p')).toHaveText('10');
 
   await showLeaderboard(friend); // friend never reloaded — this is the live push
-  await expect(friend.locator('.lb-row', { hasText: 'Bob' })).toContainText('5');
+  await expect(friend.locator('.lb-row', { hasText: 'Bob' }).locator('.lb-pts .p')).toHaveText('10');
 
   await hostCtx.close();
   await friendCtx.close();

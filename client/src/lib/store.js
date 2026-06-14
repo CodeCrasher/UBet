@@ -173,6 +173,24 @@ export async function updateSettings(patch) {
   await request(`/pools/${s.code}/settings`, { method: 'PATCH', pin: s.hostPin, body: patch });
 }
 
+// ── custom bets ──
+export async function createCustomBet(bet) {
+  const s = session.value;
+  await request(`/pools/${s.code}/custom-bets`, { method: 'POST', pin: s.hostPin, body: bet });
+}
+export async function editCustomBet(id, patch) {
+  const s = session.value;
+  await request(`/pools/${s.code}/custom-bets/${id}`, { method: 'PATCH', pin: s.hostPin, body: patch });
+}
+export async function deleteCustomBet(id) {
+  const s = session.value;
+  await request(`/pools/${s.code}/custom-bets/${id}`, { method: 'DELETE', pin: s.hostPin });
+}
+export async function answerCustomBet(id, answer) {
+  const s = session.value;
+  await request(`/pools/${s.code}/custom-bets/${id}/answer`, { method: 'POST', token: s.token, body: { answer } });
+}
+
 export function leavePool() {
   if (socket) socket.disconnect();
   socket = null;

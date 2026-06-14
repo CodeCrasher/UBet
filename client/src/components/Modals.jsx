@@ -78,8 +78,9 @@ export function SettingsModal({ onClose }) {
 
   const RULE_FIELDS = [
     ['exact', 'Exact score'],
-    ['resultGd', 'Result + GD'],
-    ['result', 'Result only'],
+    ['result', 'Correct result'],
+    ['goalDiff', 'Goal difference'],
+    ['overUnder', 'Over / Under 2.5'],
     ['knockoutMultiplier', 'KO multiplier'],
   ];
 

@@ -409,6 +409,62 @@ a { color: var(--pitch-600); }
 
 .skeleton { background: linear-gradient(90deg, var(--surface-2) 25%, #fff 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: shimmer 1.3s infinite; border-radius: var(--r-md); }
 
+/* ---------- main column (matches + bets stack) ---------- */
+.maincol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* ---------- points breakdown chips ---------- */
+.bd-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.bd-chip { font-size: 0.7rem; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+.bd-chip.ko { background: #fdf3e2; color: var(--gold-500); border-color: #f6e3c0; }
+
+/* ---------- running bets (picks per match) ---------- */
+.picks { margin-top: 12px; padding-top: 11px; border-top: 1px dashed var(--line); }
+.picks-toggle { width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; padding: 4px 0; font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+.picks-toggle .chev { color: var(--pitch-600); font-weight: 700; }
+.picks-list { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.pick-row { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 9px; font-size: 0.85rem; }
+.pick-row + .pick-row { border-top: 1px solid var(--line-2); }
+.pick-row.mine { background: var(--pitch-50); }
+.pick-row .pk-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.pick-row .pk-score { font-weight: 700; }
+.pick-row .pk-pending { font-size: 0.72rem; color: var(--faint); }
+
+/* ---------- bets panel ---------- */
+.bets-wrap { display: flex; flex-direction: column; gap: 16px; }
+.note-line { font-size: 0.84rem; color: var(--muted); margin-bottom: 10px; line-height: 1.45; }
+.score-rows { display: flex; flex-direction: column; }
+.score-row { display: flex; align-items: center; gap: 12px; padding: 9px 4px; }
+.score-row + .score-row { border-top: 1px solid var(--line-2); }
+.sr-val { min-width: 46px; text-align: center; font-weight: 700; font-size: 1.05rem; color: var(--pitch-600); flex: 0 0 auto; }
+.sr-body .sr-label { font-weight: 700; font-size: 0.9rem; }
+.sr-body .sr-desc { font-size: 0.78rem; color: var(--faint); }
+
+.new-bet { display: flex; flex-direction: column; gap: 8px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.new-bet-row { display: flex; gap: 8px; }
+.new-bet .pts-in { width: 78px; flex: 0 0 auto; text-align: center; }
+.bet-list { display: flex; flex-direction: column; gap: 12px; }
+.bet { border: 1px solid var(--line); border-radius: var(--r-md); padding: 13px; background: var(--surface); }
+.bet.settled { border-color: var(--pitch-100); background: var(--pitch-50); }
+.bet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.bet-q { font-weight: 700; font-size: 0.95rem; }
+.bet-pts { flex: 0 0 auto; font-size: 0.74rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; color: var(--gold-500); background: #fdf3e2; }
+.bet-result { font-size: 0.85rem; color: var(--pitch-700); font-weight: 600; margin: 8px 0 2px; }
+.bet-myanswer { font-size: 0.82rem; color: var(--muted); margin: 8px 0 2px; }
+.opt-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 9px 0 4px; }
+.opt { border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); padding: 7px 13px; border-radius: 999px; font-weight: 600; font-size: 0.82rem; transition: all 0.14s; }
+.opt:hover { border-color: var(--pitch-200); }
+.opt.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.opt.settle { border-color: var(--gold-400); color: var(--gold-500); }
+.opt-free, .settle-free { display: flex; gap: 8px; margin: 9px 0 4px; }
+.bet-answers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.ans-chip { font-size: 0.74rem; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+.ans-chip.win { background: var(--pitch-100); color: var(--pitch-700); border-color: var(--pitch-200); font-weight: 800; }
+.bet-voters { font-size: 0.72rem; margin-top: 7px; line-height: 1.45; }
+.bet-host { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 11px; padding-top: 10px; border-top: 1px dashed var(--line); flex-wrap: wrap; }
+.settle-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.btn-icon.del { background: transparent; border-color: transparent; font-size: 0.95rem; opacity: 0.6; }
+.btn-icon.del:hover { opacity: 1; background: var(--live-bg); }
+
 /* ============================================================
    keyframes
    ============================================================ */

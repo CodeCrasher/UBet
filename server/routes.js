@@ -14,6 +14,10 @@ import {
   setMatchLock,
   setPlayerPaid,
   updateSettings,
+  createCustomBet,
+  updateCustomBet,
+  deleteCustomBet,
+  answerCustomBet,
   httpError,
 } from './pools.js';
 
@@ -144,6 +148,33 @@ export function createApiRouter(io) {
   r.patch('/pools/:code/settings', resolvePool, requireHost, wrap((req, res) => {
     const { name, buyIn, currency, rules } = req.body || {};
     updateSettings({ poolId: req.pool.id, name, buyIn, currency, rules });
+    pushPoolUpdate(io, req.pool.id);
+    res.json({ ok: true });
+  }));
+
+  // ── custom bets (pool-level prop bets) ──
+  r.post('/pools/:code/custom-bets', resolvePool, requireHost, wrap((req, res) => {
+    const { question, options, points } = req.body || {};
+    const bet = createCustomBet({ poolId: req.pool.id, question, options, points });
+    pushPoolUpdate(io, req.pool.id);
+    res.status(201).json({ id: bet.id });
+  }));
+
+  r.patch('/pools/:code/custom-bets/:id', resolvePool, requireHost, wrap((req, res) => {
+    const { question, options, points, answer } = req.body || {};
+    updateCustomBet({ poolId: req.pool.id, betId: req.params.id, question, options, points, answer });
+    pushPoolUpdate(io, req.pool.id);
+    res.json({ ok: true });
+  }));
+
+  r.delete('/pools/:code/custom-bets/:id', resolvePool, requireHost, wrap((req, res) => {
+    deleteCustomBet({ poolId: req.pool.id, betId: req.params.id });
+    pushPoolUpdate(io, req.pool.id);
+    res.json({ ok: true });
+  }));
+
+  r.post('/pools/:code/custom-bets/:id/answer', resolvePool, requirePlayer, wrap((req, res) => {
+    answerCustomBet({ poolId: req.pool.id, betId: req.params.id, playerId: req.player.id, answer: req.body?.answer });
     pushPoolUpdate(io, req.pool.id);
     res.json({ ok: true });
   }));

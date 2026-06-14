@@ -28,10 +28,16 @@ Preact single-page app served from the same process.
   kickoff time, teams, status (upcoming / live / final) and your prediction.
   Predictions lock automatically at kickoff.
 - **Predictions** — tap a stepper to set an exact scoreline per match; auto-saved and
-  editable until kickoff. After lock you can see everyone else's picks.
-- **Scoring** (configurable) — exact scoreline **5**, correct result + goal difference
-  **3**, correct result only **1**, wrong **0**, with an optional knockout-round
-  multiplier. Recomputed deterministically server-side whenever a result is entered.
+  editable until kickoff.
+- **Scoring** (configurable, **additive markets**) — one scoreline pick scores on every
+  market it hits: exact **5**, correct result **3**, goal difference **2**, over/under 2.5
+  **2**, with an optional knockout-round multiplier. Each match card shows the per-market
+  **points breakdown**. Recomputed deterministically server-side on every result.
+- **Custom bets** — the host adds pool-level prop bets (e.g. *Golden Boot?*, *Who lifts
+  the trophy?*) with their own options + points, settles the winner, and points flow into
+  the leaderboard.
+- **Running bets** — every player's picks and custom-bet answers are visible live, per
+  match, with points once a game is final.
 - **Leaderboard** — live-ranked by points, tie-broken by exact-score count then
   correct-result count then join order. Animated rank changes (FLIP), sticky on
   desktop.

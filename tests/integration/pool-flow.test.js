@@ -26,11 +26,11 @@ before(async () => {
 test('create → join → predict → result → leaderboard + pot', () => {
   const { pool, host } = pools.createPool({
     name: 'Test', buyIn: 10, currency: 'USD', pin: '1234', hostName: 'Host',
-    rules: { exact: 5, resultGd: 3, result: 1, knockoutMultiplier: 2 },
+    rules: { result: 3, exact: 5, goalDiff: 2, overUnder: 2, knockoutMultiplier: 2 },
   });
   const p2 = pools.addPlayer({ poolId: pool.id, displayName: 'Bob' });
 
-  // both predict match #1 (a group game); host nails it, Bob gets result only
+  // both predict match #1 (a group game); host nails it, Bob gets result + o/u
   pools.submitPrediction({ poolId: pool.id, playerId: host.id, num: 1, home: 2, away: 1, force: true });
   pools.submitPrediction({ poolId: pool.id, playerId: p2.id, num: 1, home: 3, away: 0, force: true });
 
@@ -39,14 +39,42 @@ test('create → join → predict → result → leaderboard + pot', () => {
   const state = pools.buildState(pool.id, host.id);
   const hostRow = state.leaderboard.find((r) => r.playerId === host.id);
   const bobRow = state.leaderboard.find((r) => r.playerId === p2.id);
-  assert.equal(hostRow.points, 5, 'exact = 5');
-  assert.equal(bobRow.points, 1, 'correct result only = 1');
+  assert.equal(hostRow.points, 10, 'exact: result 3 + exact 5 + over/under 2 = 10');
+  assert.equal(bobRow.points, 5, 'right result + over/under = 5');
   assert.equal(state.leaderboard[0].playerId, host.id, 'host leads');
 
   // pot = 2 players * 10
   assert.equal(state.pot.total, 20);
   pools.setPlayerPaid(pool.id, host.id, true);
   assert.equal(pools.buildState(pool.id).pot.paidTotal, 10);
+});
+
+test('custom bets: answer, settle, and award points', () => {
+  const { pool, host } = pools.createPool({ name: 'Props', buyIn: 0, currency: 'USD', pin: '1', hostName: 'H' });
+  const bob = pools.addPlayer({ poolId: pool.id, displayName: 'Bob' });
+
+  const bet = pools.createCustomBet({ poolId: pool.id, question: 'Golden Boot?', options: 'Mbappé, Haaland, Messi', points: 7 });
+  pools.answerCustomBet({ poolId: pool.id, betId: bet.id, playerId: host.id, answer: 'Haaland' });
+  pools.answerCustomBet({ poolId: pool.id, betId: bet.id, playerId: bob.id, answer: 'Messi' });
+
+  // an option that isn't listed is rejected
+  assert.throws(() => pools.answerCustomBet({ poolId: pool.id, betId: bet.id, playerId: bob.id, answer: 'Kane' }), /option/i);
+
+  // before settling, nobody has custom points
+  let state = pools.buildState(pool.id, host.id);
+  assert.equal(state.customBets.length, 1);
+  assert.equal(state.customBets[0].status, 'open');
+  assert.equal(state.leaderboard.find((r) => r.playerId === host.id).customPoints, 0);
+
+  // host settles → matching answers score
+  pools.updateCustomBet({ poolId: pool.id, betId: bet.id, answer: 'Haaland' });
+  state = pools.buildState(pool.id, host.id);
+  assert.equal(state.customBets[0].status, 'settled');
+  assert.equal(state.leaderboard.find((r) => r.playerId === host.id).customPoints, 7);
+  assert.equal(state.leaderboard.find((r) => r.playerId === bob.id).customPoints, 0);
+
+  // answering a settled bet is refused
+  assert.throws(() => pools.answerCustomBet({ poolId: pool.id, betId: bet.id, playerId: bob.id, answer: 'Haaland' }), /settled/i);
 });
 
 test('knockout bracket resolves after all group games are final', () => {

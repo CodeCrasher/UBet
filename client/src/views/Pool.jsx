@@ -3,6 +3,7 @@ import { poolState, connected, isHost, session, leavePool, showToast } from '../
 import { Pot, Contributors } from '../components/Pot.jsx';
 import { Leaderboard } from '../components/Leaderboard.jsx';
 import { Matches } from '../components/Matches.jsx';
+import { BetsPanel } from '../components/Bets.jsx';
 import { HostPinModal, SettingsModal } from '../components/Modals.jsx';
 
 export function Pool() {
@@ -63,13 +64,15 @@ export function Pool() {
         {/* Mobile tabs */}
         <div class="tabs">
           <button class={tab === 'matches' ? 'active' : ''} onClick={() => setTab('matches')}>Matches</button>
+          <button class={tab === 'bets' ? 'active' : ''} onClick={() => setTab('bets')}>Bets</button>
           <button class={tab === 'table' ? 'active' : ''} onClick={() => setTab('table')}>Table</button>
           <button class={tab === 'pays' ? 'active' : ''} onClick={() => setTab('pays')}>Buy-ins</button>
         </div>
 
         <div class="pool-grid">
-          <div data-mtab class={tab === 'matches' ? 'active-tab' : ''}>
-            <Matches />
+          <div class="maincol">
+            <div data-mtab class={tab === 'matches' ? 'active-tab' : ''}><Matches /></div>
+            <div data-mtab class={tab === 'bets' ? 'active-tab' : ''}><BetsPanel /></div>
           </div>
           <div class="rail">
             <div data-mtab class={tab === 'table' ? 'active-tab' : ''}><Leaderboard /></div>

@@ -12,6 +12,9 @@ import {
   submitPrediction,
   enterResult,
   setPlayerPaid,
+  createCustomBet,
+  answerCustomBet,
+  updateCustomBet,
   buildState,
 } from './pools.js';
 
@@ -34,7 +37,7 @@ const { pool, host } = createPool({
   name: 'Friends WC 2026 Pool',
   buyIn: 25,
   currency: 'USD',
-  rules: { exact: 5, resultGd: 3, result: 1, knockoutMultiplier: 2 },
+  rules: { result: 3, exact: 5, goalDiff: 2, overUnder: 2, knockoutMultiplier: 2 },
   pin: PIN,
   hostName: 'Maya',
 });
@@ -87,6 +90,20 @@ for (const num of md1and2) {
 setPlayerPaid(pool.id, host.id, true);
 setPlayerPaid(pool.id, players[1].id, true);
 setPlayerPaid(pool.id, players[2].id, true);
+
+// Custom (prop) bets — one settled, two still open.
+const goldenBoot = createCustomBet({ poolId: pool.id, question: 'Golden Boot winner?', options: 'Mbappé, Haaland, Kane, Vinícius Jr', points: 8 });
+const trophy = createCustomBet({ poolId: pool.id, question: 'Who lifts the trophy? 🏆', options: 'Brazil, France, Argentina, Spain, England', points: 10 });
+createCustomBet({ poolId: pool.id, question: 'Goals in the Final — Over/Under 2.5?', options: 'Over, Under', points: 3 });
+
+const bootOpts = ['Mbappé', 'Haaland', 'Kane', 'Vinícius Jr'];
+const trophyOpts = ['Brazil', 'France', 'Argentina', 'Spain', 'England'];
+players.forEach((p, i) => {
+  answerCustomBet({ poolId: pool.id, betId: goldenBoot.id, playerId: p.id, answer: bootOpts[i % bootOpts.length] });
+  answerCustomBet({ poolId: pool.id, betId: trophy.id, playerId: p.id, answer: trophyOpts[i % trophyOpts.length] });
+});
+// Settle the Golden Boot so some players bank custom points.
+updateCustomBet({ poolId: pool.id, betId: goldenBoot.id, answer: 'Haaland' });
 
 const state = buildState(pool.id, host.id);
 

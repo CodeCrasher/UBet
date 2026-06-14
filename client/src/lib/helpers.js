@@ -65,8 +65,43 @@ export function defaultRoundKey(matches = []) {
 }
 
 export function pointsClass(p) {
-  if (p >= 5) return 's5';
+  if (p >= 8) return 's5';
   if (p >= 3) return 's3';
   if (p >= 1) return 's1';
   return 's0';
+}
+
+const KO = ['R32', 'R16', 'QF', 'SF', 'TP', 'F'];
+const sign = (n) => (n > 0 ? 1 : n < 0 ? -1 : 0);
+
+// Per-market points breakdown for a pick vs a finished match. Mirrors
+// server/scoring.js#scoreBreakdown — kept in sync for display only; the server
+// remains authoritative for the stored `points`.
+export function scoreBreakdown(pred, match, rules = {}) {
+  const zero = { result: 0, exact: 0, goalDiff: 0, overUnder: 0, total: 0, multiplier: 1 };
+  if (!pred || !match || match.status !== 'final') return zero;
+  const ah = match.homeScore;
+  const aa = match.awayScore;
+  if (ah == null || aa == null || pred.home == null || pred.away == null) return zero;
+  const ph = pred.home;
+  const pa = pred.away;
+  const exactHit = ph === ah && pa === aa;
+  const line = rules.ouLine ?? 2.5;
+  const result = sign(ph - pa) === sign(ah - aa) ? rules.result ?? 3 : 0;
+  const exact = exactHit ? rules.exact ?? 5 : 0;
+  const goalDiff = ph - pa === ah - aa && !exactHit ? rules.goalDiff ?? 2 : 0;
+  const overUnder = ph + pa > line === ah + aa > line ? rules.overUnder ?? 2 : 0;
+  const base = result + exact + goalDiff + overUnder;
+  const multiplier = KO.includes(match.stage) ? rules.knockoutMultiplier || 1 : 1;
+  return { result, exact, goalDiff, overUnder, total: base * multiplier, multiplier };
+}
+
+// Non-zero markets as labelled chips, for the points-calculation display.
+export function breakdownChips(bd) {
+  const out = [];
+  if (bd.exact) out.push(['Exact', bd.exact]);
+  if (bd.result) out.push(['Result', bd.result]);
+  if (bd.goalDiff) out.push(['Goal diff', bd.goalDiff]);
+  if (bd.overUnder) out.push(['O/U 2.5', bd.overUnder]);
+  return out;
 }

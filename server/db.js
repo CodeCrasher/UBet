@@ -78,6 +78,29 @@ db.exec(`
     UNIQUE (player_id, match_id)
   );
 
+  CREATE TABLE IF NOT EXISTS custom_bets (
+    id            TEXT PRIMARY KEY,
+    pool_id       TEXT NOT NULL REFERENCES pools(id) ON DELETE CASCADE,
+    question      TEXT NOT NULL,
+    options       TEXT,                     -- JSON array of choices, or null for free text
+    points        INTEGER NOT NULL DEFAULT 3,
+    answer        TEXT,                     -- winning answer; null ⇒ still open
+    created_at    TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS custom_answers (
+    id            TEXT PRIMARY KEY,
+    pool_id       TEXT NOT NULL REFERENCES pools(id) ON DELETE CASCADE,
+    bet_id        TEXT NOT NULL REFERENCES custom_bets(id) ON DELETE CASCADE,
+    player_id     TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    answer        TEXT NOT NULL,
+    updated_at    TEXT NOT NULL,
+    UNIQUE (bet_id, player_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_cbets_pool ON custom_bets(pool_id);
+  CREATE INDEX IF NOT EXISTS idx_cans_bet ON custom_answers(bet_id);
+  CREATE INDEX IF NOT EXISTS idx_cans_player ON custom_answers(player_id);
   CREATE INDEX IF NOT EXISTS idx_players_pool ON players(pool_id);
   CREATE INDEX IF NOT EXISTS idx_matches_pool ON matches(pool_id);
   CREATE INDEX IF NOT EXISTS idx_pred_pool ON predictions(pool_id);
