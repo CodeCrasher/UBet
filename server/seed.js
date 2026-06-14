@@ -1,131 +1,62 @@
 #!/usr/bin/env node
-// Spin up a fully populated demo pool for instant testing:
+// Spin up a populated app for instant testing:
 //   npm run seed
-// Creates a pool, adds players, fills predictions, and enters results for the
-// first two matchdays so the leaderboard + pot are already alive. Prints the
-// room code, host PIN, and player tokens so you can log in as anyone.
+// Loads fixtures, seeds the five pools per fixture, creates demo users, and
+// places a few demo entries on the next open fixture. Prints logins + admin PIN.
 
-import { initFixtures, getFixtures } from './fixtures.js';
-import {
-  createPool,
-  addPlayer,
-  submitPrediction,
-  enterResult,
-  setPlayerPaid,
-  createCustomBet,
-  answerCustomBet,
-  updateCustomBet,
-  buildState,
-} from './pools.js';
+import { loadFixtures, resolveKnockouts, allFixtures, getFixture, isLocked } from './tournament.js';
+import { seedPools, poolsForFixture, enterPool } from './pools.js';
+import { register, getUserByEmail } from './users.js';
+import { teamMap } from './fixtures.js';
+import { HOME, AWAY, DRAW } from './settle.js';
 
-await initFixtures();
+loadFixtures();
+resolveKnockouts();
+seedPools();
 
-// Deterministic RNG so the demo is reproducible.
-function mulberry32(seed) {
-  return function () {
-    seed |= 0;
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+const DEMO = [
+  { email: 'alice@ubet.test', displayName: 'Alice' },
+  { email: 'bob@ubet.test', displayName: 'Bob' },
+  { email: 'carol@ubet.test', displayName: 'Carol' },
+];
+const PASSWORD = 'password';
+
+const users = DEMO.map((d) => {
+  const existing = getUserByEmail(d.email);
+  if (existing) return existing;
+  return register({ email: d.email, password: PASSWORD, displayName: d.displayName });
+});
+
+// Find the next open (unlocked) fixture so demo entries can be placed.
+const open = allFixtures().find((f) => f.home && f.away && !isLocked(getFixture(f.num)));
+const tmap = teamMap();
+
+if (open) {
+  const pools = poolsForFixture(open.num);
+  const winnerBig = pools.find((p) => p.type === 'WINNER_BIG');
+  const exact = pools.find((p) => p.type === 'EXACT');
+  const total = pools.find((p) => p.type === 'TOTAL');
+  const tryEnter = (poolId, userId, pred) => {
+    try { enterPool({ poolId, userId, pred }); } catch { /* already entered / locked */ }
   };
+  tryEnter(winnerBig.id, users[0].id, { winner: HOME });
+  tryEnter(winnerBig.id, users[1].id, { winner: AWAY });
+  tryEnter(winnerBig.id, users[2].id, { winner: DRAW });
+  tryEnter(exact.id, users[0].id, { home: 2, away: 1 });
+  tryEnter(exact.id, users[1].id, { home: 1, away: 1 });
+  tryEnter(total.id, users[2].id, { total: 3 });
 }
-
-const PIN = process.env.SEED_PIN || '2026';
-
-const { pool, host } = createPool({
-  name: 'Friends WC 2026 Pool',
-  buyIn: 25,
-  currency: 'USD',
-  rules: { result: 3, exact: 5, goalDiff: 2, overUnder: 2, knockoutMultiplier: 2 },
-  pin: PIN,
-  hostName: 'Maya',
-});
-
-const players = [host];
-for (const name of ['Alex', 'Sam', 'Jordan', 'Taylor', 'Priya']) {
-  players.push(addPlayer({ poolId: pool.id, displayName: name }));
-}
-
-const fixtures = getFixtures();
-const groupMatches = fixtures.matches.filter((m) => m.stage === 'group');
-
-// Deterministic "actual" scoreline for a finished match.
-function actualFor(num) {
-  const rng = mulberry32(num * 1000 + 7);
-  return { home: Math.floor(rng() * 4), away: Math.floor(rng() * 3) };
-}
-
-// Each player has an accuracy bias → produces a spread on the leaderboard.
-const accuracy = [0.55, 0.45, 0.35, 0.3, 0.25, 0.2];
-
-function predictionFor(playerIdx, num) {
-  const actual = actualFor(num);
-  const rng = mulberry32(num * 131 + playerIdx * 977 + 3);
-  if (rng() < accuracy[playerIdx]) return actual; // nail it
-  // otherwise perturb
-  const jitter = (base) => Math.max(0, base + (rng() < 0.5 ? -1 : 1) * (rng() < 0.5 ? 0 : 1));
-  return { home: jitter(actual.home), away: jitter(actual.away) };
-}
-
-// MD1 + MD2 will get results entered; everyone predicts MD1–MD3.
-const md1and2 = groupMatches.filter((m) => m.matchday <= 2).map((m) => m.id);
-const md3 = groupMatches.filter((m) => m.matchday === 3).map((m) => m.id);
-const toPredict = [...md1and2, ...md3];
-
-players.forEach((p, pi) => {
-  for (const num of toPredict) {
-    const { home, away } = predictionFor(pi, num);
-    submitPrediction({ poolId: pool.id, playerId: p.id, num, home, away, force: true });
-  }
-});
-
-// Host enters results for MD1 + MD2.
-for (const num of md1and2) {
-  const { home, away } = actualFor(num);
-  enterResult({ poolId: pool.id, num, homeScore: home, awayScore: away });
-}
-
-// Mark a few buy-ins as paid for the pot panel.
-setPlayerPaid(pool.id, host.id, true);
-setPlayerPaid(pool.id, players[1].id, true);
-setPlayerPaid(pool.id, players[2].id, true);
-
-// Custom (prop) bets — one settled, one open with a deadline, one already closed.
-const goldenBoot = createCustomBet({ poolId: pool.id, question: 'Golden Boot winner?', options: 'Mbappé, Haaland, Kane, Vinícius Jr', points: 8 });
-const trophy = createCustomBet({ poolId: pool.id, question: 'Who lifts the trophy? 🏆', options: 'Brazil, France, Argentina, Spain, England', points: 10, locksAt: '2026-07-19T18:00:00.000Z' });
-const goals = createCustomBet({ poolId: pool.id, question: 'Goals in the Final — Over/Under 2.5?', options: 'Over, Under', points: 3 });
-
-const bootOpts = ['Mbappé', 'Haaland', 'Kane', 'Vinícius Jr'];
-const trophyOpts = ['Brazil', 'France', 'Argentina', 'Spain', 'England'];
-const goalsOpts = ['Over', 'Under'];
-players.forEach((p, i) => {
-  answerCustomBet({ poolId: pool.id, betId: goldenBoot.id, playerId: p.id, answer: bootOpts[i % bootOpts.length] });
-  answerCustomBet({ poolId: pool.id, betId: trophy.id, playerId: p.id, answer: trophyOpts[i % trophyOpts.length] });
-  answerCustomBet({ poolId: pool.id, betId: goals.id, playerId: p.id, answer: goalsOpts[i % goalsOpts.length] });
-});
-// Settle the Golden Boot so some players bank custom points.
-updateCustomBet({ poolId: pool.id, betId: goldenBoot.id, answer: 'Haaland' });
-// Close the goals bet (deadline already passed) to show the locked state.
-updateCustomBet({ poolId: pool.id, betId: goals.id, locksAt: '2026-06-01T00:00:00.000Z' });
-
-const state = buildState(pool.id, host.id);
 
 console.log('\n────────────────────────────────────────────');
-console.log('  ⚽  UBet demo pool ready');
+console.log('  ⚽  UBet demo ready');
 console.log('────────────────────────────────────────────');
-console.log(`  Pool name : ${state.pool.name}`);
-console.log(`  Room code : ${state.pool.code}`);
-console.log(`  Host PIN  : ${PIN}`);
-console.log(`  Buy-in    : ${state.pool.currency} ${state.pool.buyIn}`);
-console.log(`  Pot       : ${state.pool.currency} ${state.pot.total} (${state.pot.paidTotal} paid)`);
-console.log('\n  Players (token — use as x-player-token / socket auth):');
-for (const p of players) {
-  console.log(`   • ${p.display_name.padEnd(8)} ${p.is_host ? '(host) ' : '       '} ${p.token}`);
+console.log('  Demo logins (password for all: "password"):');
+for (const u of users) console.log(`   • ${u.email.padEnd(18)} balance Rs ${u.balance}`);
+console.log(`\n  Admin PIN: ${process.env.ADMIN_PIN || '2026'} (open the ⚙ Admin panel)`);
+if (open) {
+  console.log(`\n  Demo entries placed on fixture #${open.num}: ${tmap.get(open.home)?.name} v ${tmap.get(open.away)?.name}`);
+  console.log('  → log in, open that fixture, enter a pool, then use Admin to push live scores + confirm the result.');
+} else {
+  console.log('\n  (No open fixtures right now — every fixture has kicked off. Use Admin to drive scores.)');
 }
-console.log('\n  Leaderboard:');
-state.leaderboard.forEach((row) => {
-  console.log(`   ${String(row.rank).padStart(2)}. ${row.name.padEnd(8)} ${row.points} pts  (${row.exact} exact)`);
-});
-console.log('\n  → Open the app, click "Join a pool", enter the room code above.');
-console.log('  → To act as host, use PIN', PIN, '\n');
+console.log('');

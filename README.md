@@ -1,16 +1,12 @@
-# ⚽ UBet — World Cup 2026 Prediction Pool
+# ⚽ UBet — live World Cup 2026 prediction board
 
-A private, real-time score-prediction pool for the FIFA World Cup 2026. Friends
-join with a room code, predict exact scorelines for every match, earn points, and
-climb a live leaderboard. Whoever tops the board when the tournament ends takes the
-pot. **No real money moves through the app** — buy-ins and payments are tracked, not
-charged.
+A Dream11-style, **pari-mutuel** prediction game for the FIFA World Cup 2026. Log in,
+browse fixtures, enter pre-made pools, place a pick, and watch a live **tote board** track
+who'd win if the match ended right now — then settle for real when the result is confirmed.
 
-The server is the single source of truth for predictions, scoring, pot value, and
-standings. Everything is one deployable Node service: Express + Socket.io API and a
-Preact single-page app served from the same process.
-
-<p align="center"><em>Light, airy UI · pitch-green &amp; gold · mobile-first · animated pot counter &amp; live leaderboard.</em></p>
+**No real money — ever.** Entry fees and winnings are virtual balances in Rs; nothing is
+ever charged. The server is the single source of truth for balances, pools, standings, and
+settlement.
 
 <p align="center">
   <strong>▶ Live:</strong> <a href="https://ubet-production.up.railway.app">ubet-production.up.railway.app</a>
@@ -19,308 +15,190 @@ Preact single-page app served from the same process.
 
 ---
 
-## Features
+## What it does
 
-- **Pools / rooms** — a host creates a pool and gets a 6-character room code. Players
-  join with the code + a display name. Host actions (entering results, locking
-  matches, editing settings, toggling buy-ins, removing players) are **PIN-gated**
-  (rate-limited, exchanged for a short-lived host session). Players can **resume on
-  another device** via a personal link.
-- **Matches view** — card-based fixtures grouped by matchday / knockout round, with
-  kickoff time, teams, status (upcoming / live / final) and your prediction.
-  Predictions lock automatically at kickoff.
-- **Predictions** — tap a stepper to set an exact scoreline per match; auto-saved and
-  editable until kickoff.
-- **Scoring** (configurable, **additive markets**) — one scoreline pick scores on every
-  market it hits: exact **5**, correct result **3**, goal difference **2**, over/under 2.5
-  **2**, with an optional knockout-round multiplier. Each match card shows the per-market
-  **points breakdown**. Recomputed deterministically server-side on every result.
-- **Custom bets** — the host adds pool-level prop bets (e.g. *Golden Boot?*, *Who lifts
-  the trophy?*) with their own options + points, settles the winner, and points flow into
-  the leaderboard.
-- **Running bets** — every player's picks and custom-bet answers are visible live, per
-  match, with points once a game is final.
-- **Leaderboard** — live-ranked by points, tie-broken by exact-score count then
-  correct-result count then join order. Animated rank changes (FLIP), sticky on
-  desktop.
-- **Pot panel (hero)** — animated pot counter = Σ buy-ins, contributor list with
-  paid / unpaid toggles (host-managed), collection progress bar, and projected winner.
-- **Real-time** — pot value, leaderboard and match status push live to every connected
-  client over Socket.io, with the server as the authority.
-- **Knockout bracket** — Round of 32 → R16 → QF → SF → 3rd-place → Final, unlocking
-  automatically as earlier rounds resolve.
+- **Log in once, stay logged in.** Email + password with an httpOnly session cookie that
+  survives refreshes and restarts. (Chosen over OAuth as the lightest, dependency-free,
+  self-contained option — no provider keys to manage. The session model is a server-side
+  token table, so it's trivial to add OAuth later.)
+- **Fixtures home.** Every WC 2026 match as a card (kickoff, teams, UPCOMING / LIVE / FINAL).
+- **Five pre-made pools per fixture.** Users **never create pools** — they're all seeded.
+- **Per-pool leaderboards** that update live over Socket.io.
+- **The Tote Board.** A stadium betting-board hero: a split-flap pot counter and a live
+  per-pool standing where rows slide and the new leader's badge flips to **CURRENTLY WINNING**.
+- **Total earnings + drill-down.** A balance chip shows running earnings (virtual); tapping it
+  opens an itemised, reconciling breakdown per fixture/pool.
+- **PIN-gated admin** to push live scores, confirm results, and trigger settlement.
 
 ---
 
-## Tech stack
+## The five pools (per fixture)
 
-| Layer        | Choice                                                        |
-|--------------|---------------------------------------------------------------|
-| Backend      | Node 20, Express, Socket.io                                   |
-| Persistence  | SQLite via `better-sqlite3` (WAL mode)                        |
-| Frontend     | Preact + `@preact/signals`, built with Vite                   |
-| Tests        | `node --test` (unit + integration), Playwright (E2E)          |
-| Deploy       | Single Docker image · live on Railway · GitHub Actions auto-deploy |
+Defined data-first in [`server/data/pool-types.json`](server/data/pool-types.json) — change
+fees/mechanics without touching code.
+
+| # | Pool | Predict | Entry |
+|---|------|---------|-------|
+| 1 | Winner Pool · Big | Match winner (Home/Draw/Away) | Rs 1000 |
+| 2 | Exact Score Pool | Exact final scoreline | Rs 500 |
+| 3 | Winner Pool · Small | Match winner | Rs 500 |
+| 4 | Total Goals Pool | Exact total combined goals | Rs 500 |
+| 5 | Margin Pool | Winner **and** exact winning margin (draw = 0) | Rs 750 |
+
+All entries **lock at kickoff** — no joining or editing once the match starts. Knockout
+winner picks have no Draw (winner includes extra time and penalties).
+
+### Correctness & the knockout scoreline rule
+
+A pick is **correct** when: winner pools — the pick equals the result; exact — both goals
+match; total — the combined total matches; margin — both winner and exact margin match.
+
+For knockout matches, the **scoreline used for pools 2/4/5 is the end-of-extra-time score,
+excluding penalty-shootout goals**. A 1–1 decided on penalties counts as scoreline 1–1
+(total 2, margin 0); the winner pools (1/3) and the *winner* half of the margin pool use the
+official progressing side, while the margin uses the ET scoreline — so a pen-decided draw
+refunds the margin pool (no valid non-draw margin can be 0).
+
+### Settlement (pari-mutuel, deterministic)
+
+- `prizePool = entryFee × entrants` (rake configurable per pool, default 0).
+- The pool is **split equally among all correct entrants** — no ranks, no order. Each gets
+  `prizePool ÷ correctCount` in whole Rs; any rounding remainder is handed out one Rs at a
+  time to correct entrants in **entry-timestamp order**, so the books stay exact.
+- **Zero correct → everyone is refunded** their entry (common for pools 2/4/5 — by design).
+- **One correct → takes the whole pot.**
+- Settlement runs once when the admin confirms the result and is **idempotent** — re-running
+  changes nothing.
+
+The same `settlePool` / `isCorrect` functions ([`server/settle.js`](server/settle.js)) power
+both the **live provisional standing** and the **final settlement**, fed by either the live
+score or the confirmed score — so "currently winning" and "actually paid" never drift.
+
+### Live provisional standing
+
+While a match is live, each pool's board treats the current score as if final: correct
+entrants share the projected pot and show **CURRENTLY WINNING**; the rest are ranked by
+closeness (display only — payout stays binary). If no one is currently correct, the board
+says so plainly ("pot would refund at this score"). **No balances move until full time.**
 
 ---
 
-## Quick start (local)
+## Quick start
 
 Requires **Node 20+**.
 
 ```bash
 npm install            # also generates server/data/fixtures.json
-cp .env.example .env   # optional — all values have sensible defaults
+cp .env.example .env   # optional — all values have defaults
 
-# Option A: dev with hot-reload (Vite on :5173, API on :8080)
-npm run dev            # open http://localhost:5173
+# dev with hot reload (Vite :5173 proxying API/ws to :8080)
+npm run dev            # → http://localhost:5173
 
-# Option B: production-style single service
-npm run build          # builds the client into /dist
-npm start              # serves API + SPA on http://localhost:8080
+# production-style single service
+npm run build && npm start   # → http://localhost:8080
 ```
 
-### Spin up a populated demo pool
+### Spin up a populated demo
 
 ```bash
 npm run seed
 ```
 
-This creates a pool with players, predictions and two matchdays of results already
-entered, then prints the **room code**, **host PIN**, and player tokens. Open the app,
-click *Join a pool*, and enter the printed code. To act as host, click **🔑 Host** and
-enter the printed PIN.
+Creates demo users (`alice@ubet.test`, `bob@ubet.test`, `carol@ubet.test` — password
+`password` for all), seeds every fixture's five pools, and places a few demo entries on the
+next open fixture. Log in, open a fixture, enter a pool, then open the **⚙ admin panel**
+(PIN `2026` by default) to push live scores and confirm the result.
 
 ---
 
 ## Configuration (env vars)
 
-All configuration is via environment variables; every one has a default, so the app
-runs with no `.env` at all.
-
-| Variable           | Default            | Description |
-|--------------------|--------------------|-------------|
-| `PORT`             | `8080`             | HTTP port for the single service. |
-| `NODE_ENV`         | `development`      | `production` enables static SPA serving + gzip. |
-| `DATABASE_PATH`    | `./data/ubet.db`   | SQLite file location. Point at a mounted volume in prod. |
-| `CORS_ORIGIN`      | `*`                | Comma-separated allowed origins, or `*`. |
-| `SESSION_SECRET`   | _(per-boot random)_ | Signs host-session tokens. Set in prod so host sessions survive restarts. |
-| `HOST_SESSION_TTL_MS` | `28800000` (8h) | How long a host stays unlocked before re-entering the PIN. |
-| `DEFAULT_BUY_IN`   | `20`               | Buy-in pre-filled when a host creates a pool. |
-| `DEFAULT_CURRENCY` | `USD`              | Currency pre-filled when a host creates a pool. |
-| `SYNC_PROVIDER`    | _(empty)_          | `thesportsdb` or `footballdata` to pull real fixtures + live results (see below). Empty = committed snapshot + manual results. |
-| `FOOTBALL_DATA_API_KEY` | _(empty)_     | Free key from [football-data.org](https://football-data.org) (required for `footballdata`). |
-| `SYNC_INTERVAL_MS` | `60000`            | How often to poll the provider for live updates. |
-| `SYNC_SEASON`      | `2026`             | Tournament season to sync. |
-| `SPORTSDB_KEY`     | `3`                | TheSportsDB key (`3` is the shared free key). |
-| `SPORTSDB_LEAGUE`  | `4429`             | TheSportsDB league id (4429 = FIFA World Cup). |
-| `FIXTURES_API_URL` | _(empty)_          | Optional: pull a full fixtures snapshot from a URL at boot (lower priority than `SYNC_PROVIDER`). |
-| `FIXTURES_API_KEY` | _(empty)_          | Optional bearer token for `FIXTURES_API_URL`. |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8080` | HTTP port for the single service. |
+| `NODE_ENV` | `development` | `production` → secure cookies + static SPA serving. |
+| `DATABASE_PATH` | `./data/ubet.db` | SQLite file. Point at a mounted volume in prod. |
+| `CORS_ORIGIN` | `*` | Comma-separated allowed origins, or `*`. |
+| `STARTING_BALANCE` | `100000` | Virtual Rs granted to each new account. |
+| `ADMIN_PIN` | `2026` | Gates the admin panel — **change in production**. |
+| `SESSION_TTL_MS` | `2592000000` (30d) | Login-cookie lifetime. |
 
 ---
 
-## Tournament data
+## Real-time events (`namespace:action`, server is authority)
 
-The 48-team, 12-group, 104-match structure (group stage + full knockout bracket) is
-generated deterministically by [`server/data/build-fixtures.mjs`](server/data/build-fixtures.mjs)
-and committed as `server/data/fixtures.json`. By default each new pool clones this
-snapshot and the host enters results manually.
+| Direction | Event | Payload |
+|-----------|-------|---------|
+| client → server | `fixture:subscribe` / `pool:subscribe` | join a fixture/pool room |
+| server → client | `match:scoreUpdate` | new live score + status for a fixture |
+| server → client | `pool:update` | full pool standing (open / live provisional / settled) |
+| server → client | `fixtures:update` | a fixture's status/score changed |
+| server → client | `user:earnings` | the viewer's `{ total, balance }` after a settlement |
 
-### Live sync (real fixtures + results)
+---
 
-Set `SYNC_PROVIDER` to pull **real fixtures and live scores** from a football data API.
-The server polls on `SYNC_INTERVAL_MS`, rebuilds a canonical tournament (stable per-pool
-match numbers so predictions stay attached), applies results to every synced pool,
-recomputes points, and pushes updates over Socket.io. Synced pools don't need a host to
-enter results — and match numbers stay stable across syncs.
-
-| Provider | Key? | Notes |
-|----------|------|-------|
-| `thesportsdb`  | No (free key `3`) | Works out of the box. Coverage depends on what TheSportsDB has loaded for the season — often **partial/provisional** until close to / during the tournament. |
-| `footballdata` | Yes (free)        | Most complete + accurate. Register at [football-data.org](https://football-data.org), set `FOOTBALL_DATA_API_KEY`. |
+## Tests
 
 ```bash
-# Keyless, works immediately (data may be partial right now):
-SYNC_PROVIDER=thesportsdb npm start
-
-# Complete + accurate (recommended once you have a free key):
-SYNC_PROVIDER=footballdata FOOTBALL_DATA_API_KEY=xxxx npm start
+npm run lint          # ESLint
+npm test              # unit (settle core) + integration (full domain flow)
+npm run test:e2e      # Playwright, desktop + mobile
 ```
 
-> **Why isn't the default draw "correct"?** Until close to / during the tournament, the
-> official WC 2026 draw and results aren't fully published in any *free* API. The committed
-> snapshot is a complete-but-illustrative bracket so the app is usable offline; turn on a
-> provider and it self-corrects to real data (and live results) as the feed fills in.
-> Adding a new provider is just another adapter in [`server/providers/`](server/providers/).
-
-- **Custom fixtures (no API):** edit the `TEAMS` table in `build-fixtures.mjs` and run
-  `npm run build:fixtures`, or hand-edit `fixtures.json`. A host can also edit/lock any
-  fixture in-app on non-synced pools.
-
-See **Non-obvious tradeoffs** below for what's a real-tournament approximation.
-
----
-
-## Real-time event convention
-
-Socket.io events follow a `namespace:action` convention. The server is authoritative —
-clients mutate state through the REST API and receive pushes; they never invent state.
-
-| Direction | Event                | Payload |
-|-----------|----------------------|---------|
-| client → server | `pool:subscribe`    | `{ code, token }` — join a pool's room |
-| server → client | `pool:state`        | full viewer-specific snapshot (incl. your predictions) |
-| server → client | `pool:sync`         | full shared snapshot after any change |
-| server → client | `leaderboard:update`| ranked players |
-| server → client | `pot:update`        | pot value + contributors |
-| server → client | `players:update`    | roster |
-| server → client | `match:update`      | a single changed fixture |
-| server → client | `pool:error`        | `{ message }` |
-
----
-
-## Project structure
-
-```
-server/
-  index.js          Express + Socket.io entry; static SPA serving; kickoff ticker
-  db.js             SQLite schema + connection (WAL)
-  scoring.js        Pure, unit-tested scoring + standings + bracket helpers
-  pools.js          Pool service: lifecycle, predictions, results, KO resolution
-  routes.js         REST API (player + PIN-gated host endpoints)
-  sockets.js        Socket.io subscribe/snapshot
-  realtime.js       Authoritative state push helpers
-  fixtures.js       Fixture loader (snapshot / synced canonical / custom URL)
-  sync.js           Live-sync orchestrator (provider → canonical → pools → push)
-  providers/        Pluggable data adapters
-    thesportsdb.mjs      Keyless free provider
-    footballdata.mjs     football-data.org provider (free key)
-  seed.js           Demo-pool generator
-  data/
-    build-fixtures.mjs   Deterministic fixture generator
-    fixtures.json        Committed WC2026 snapshot
-    countries.mjs        Team name → code + flag resolver
-client/
-  src/
-    app.jsx, main.jsx
-    lib/ (store.js signals + socket, api.js, helpers.js)
-    components/ (Pot, Leaderboard, Matches, Modals, CountUp)
-    views/ (Landing, Pool)
-    styles.css        Design system
-tests/
-  unit/             scoring.test.js
-  integration/      pool-flow.test.js (DB-backed service + bracket resolver)
-  e2e/              smoke.spec.js (Playwright, desktop + mobile)
-```
-
----
-
-## Testing
-
-```bash
-npm run lint          # ESLint (server + client)
-npm test              # unit + integration (node --test)
-npm run test:e2e      # Playwright E2E, desktop + mobile (builds + starts the app)
-```
-
-CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs lint + build + tests
-on every push/PR, with Playwright E2E in a separate job.
-[`deploy.yml`](.github/workflows/deploy.yml) then ships `main` to Railway (see
-**Deploy** below).
+- **Unit** ([`tests/unit/settle.test.js`](tests/unit/settle.test.js)) covers every pool type
+  and each settlement edge case — zero-correct refund, one-correct whole-pot, rounding
+  remainder by entry time, rake, and deterministic/idempotent re-runs.
+- **Integration** ([`tests/integration/flow.test.js`](tests/integration/flow.test.js)) runs
+  register → enter → live provisional → confirm → earnings reconcile → idempotent re-settle.
+- **E2E** drives the UI: log in → refresh stays logged in → enter a pool → admin pushes a
+  live score (the board swings) → admin confirms → board, earnings, and breakdown reconcile.
 
 ---
 
 ## Deploy to Railway
 
-UBet deploys as **one service** from the included `Dockerfile`, and is **already live**
-at **https://ubet-production.up.railway.app**.
+Deploys as **one service** from the included `Dockerfile`; `railway.json` builds it.
 
-### How the live deployment is wired
+1. Push to GitHub → Railway: **New Project → Deploy from GitHub repo**.
+2. Add a **Volume** mounted at `/app/data` so the SQLite DB (users, balances, entries)
+   survives redeploys (default `DATABASE_PATH` is `/app/data/ubet.db`).
+3. Set `ADMIN_PIN` (and any other env you want). `PORT` is injected by Railway.
 
-| Piece | Setup |
-|-------|-------|
-| Build | Railway reads [`railway.json`](railway.json) → builds the `Dockerfile` (pins the `better-sqlite3` native build). |
-| Persistence | A Railway **Volume** is mounted at `/app/data`; the default `DATABASE_PATH` is `/app/data/ubet.db`, so the SQLite DB survives redeploys. |
-| Port | Railway injects `PORT`; the server honours it. |
-| Auto-deploy | [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs `railway up` on every push to `main`. |
-
-### Continuous deployment (push → live)
-
-On every push to `main`, GitHub Actions deploys to Railway. This needs **one secret**:
-
-1. Create a Railway token — [Project → Settings → Tokens](https://railway.com/project/fa7262bc-a582-45a0-86ce-6a8a52f5e655/settings/tokens) (project-scoped) or [Account → Tokens](https://railway.com/account/tokens).
-2. Add it to the repo:
-   ```bash
-   gh secret set RAILWAY_TOKEN --repo CodeCrasher/UBet   # paste the token
-   ```
-
-After that, `git push` → CI (lint + build + tests) → auto-deploy. (`ci.yml` and `deploy.yml`
-run independently, mirroring a typical Railway setup.)
-
-### Deploy your own copy
-
-1. Fork/clone, then in Railway: **New Project → Deploy from GitHub repo** (Railway builds
-   the Dockerfile automatically), or from the CLI:
-   ```bash
-   railway init --name UBet
-   railway up
-   railway volume add -m /app/data        # persist the SQLite DB
-   railway domain                          # get a public URL
-   ```
-2. Set any env vars you want (see the table above) — e.g. `SYNC_PROVIDER` for live data.
-   None are required.
-
-### Run anywhere Docker runs
+Push-to-deploy is wired via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
+(needs a `RAILWAY_TOKEN` repo secret). CI ([`ci.yml`](.github/workflows/ci.yml)) runs lint +
+build + tests + Playwright on every push.
 
 ```bash
-docker build -t ubet .
-docker run -p 8080:8080 -v ubet-data:/app/data ubet
-# open http://localhost:8080
+docker build -t ubet . && docker run -p 8080:8080 -v ubet-data:/app/data ubet
 ```
-
-> Prefer Nixpacks over the Dockerfile? Railway's Nixpacks will detect the Node app and
-> run `npm run build` then `npm start`. The Dockerfile is recommended because it pins the
-> `better-sqlite3` native build.
 
 ---
 
+## Design — the "live-broadcast betting board"
+
+One opinionated identity: a modern match-graphics package. Light, crisp app (turf green
+`--pitch`, hot `--signal` reserved for live/lead-change only), Archivo for scoreboard data +
+Hanken Grotesk for UI, tabular figures everywhere money/scores appear. The **Tote Board** is
+the hero — a dark stadium board with a split-flap pot counter and a leaderboard that slides
+and flips as the lead swings — kept loud while everything around it stays quiet. All motion
+honors `prefers-reduced-motion`.
+
 ## Non-obvious tradeoffs
 
-These were judgment calls — flagged here rather than blocking:
-
-- **Seeded draw by default, not the official one.** The committed bracket is a complete
-  but illustrative snapshot — no *free* API has the full, correct WC 2026 draw + results
-  until close to / during the tournament. Set `SYNC_PROVIDER` (see **Live sync**) to pull
-  real fixtures + live scores; or replace `TEAMS` in `build-fixtures.mjs`; or have a host
-  edit/lock fixtures in-app.
-- **Best-thirds routing is simplified.** The 8 best third-placed teams are picked
-  correctly (points → GD → GF), but routed into Round-of-32 slots by group letter
-  rather than the official lookup table. The bracket is structurally correct and fully
-  resolvable; hosts can override by entering knockout results directly.
-- **"Head-to-head" tie-break.** In a prediction pool players don't play each other, so
-  a literal H2H tie-break isn't meaningful. Ties are broken by **exact-score count →
-  correct-result count → join order**, which rewards prediction accuracy.
-- **Sessions are token-based, no accounts.** Players hold an opaque token (localStorage);
-  the host verifies a per-pool **PIN** (scrypt-hashed) once and gets a **short-lived,
-  signed host-session token** — the raw PIN isn't kept or resent. PIN checks are
-  **rate-limited with lockout** (brute-force protection), responses carry security headers
-  + a tuned CSP, the host can **kick/revoke** a player, and a **resume link**
-  (`#resume=CODE.TOKEN`, kept in the URL fragment) lets a player continue on another
-  device. There's still no email/password — fine for a private friends pool; add an
-  external auth layer if you expose it widely.
-- **Per-pool results (manual mode).** With no provider configured, each pool's host enters
-  results for their own pool, so pools are fully self-contained (no global admin role).
-  With `SYNC_PROVIDER` set, synced pools instead auto-score from the live feed.
-- **Knockout penalty scoreline.** Prediction points score the entered 90/120-minute
-  scoreline. For a drawn knockout match the host also records the shoot-out winner,
-  which is used only for bracket advancement, not for scoring.
-- **Kickoff locking uses server wall-clock.** Fixtures carry real 2026 dates; a match
-  locks once its kickoff passes. The unit/integration tests are clock-independent; the
-  E2E test predicts an upcoming fixture and therefore assumes it runs within the
-  tournament window.
+- **Auth is email/password, not OAuth** — lightest to implement, no secrets, fully
+  self-contained. Sessions are opaque DB-backed tokens in an httpOnly cookie.
+- **One global tournament.** Pools are shared by all users (not per-room), which is what
+  "pre-made pools, users never create" implies — far simpler than the old clone-per-room model.
+- **Live scores are admin-driven** by default (PIN panel). A live data feed could replace the
+  admin as the score source; the provisional/settlement logic is feed-agnostic.
+- **Seeded draw, not the official one.** The committed bracket is a plausible snapshot; group
+  positions resolve the knockout bracket as results are confirmed. Edit
+  [`build-fixtures.mjs`](server/data/build-fixtures.mjs) for the real draw.
+- **Kickoff locking uses server wall-clock.** The unit/integration tests are clock-independent;
+  the E2E enters the next *open* fixture, so it assumes it runs within the tournament window.
 
 ---
 
 ## License
 
-MIT — do whatever you like. Have fun, and may the best predictor win. 🏆
+MIT — virtual money, real fun. 🏆

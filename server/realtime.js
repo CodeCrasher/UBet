@@ -1,29 +1,41 @@
-import { buildState } from './pools.js';
+import { poolStanding, poolsForFixture } from './pools.js';
+import { getFixture, getLive } from './tournament.js';
+import { totalEarnings } from './earnings.js';
+import { getUserById } from './users.js';
 
-export const room = (poolId) => `pool:${poolId}`;
+// Event convention: namespace:action. Server is the single source of truth.
+export const poolRoom = (id) => `pool:${id}`;
+export const fixtureRoom = (n) => `fixture:${n}`;
+export const userRoom = (id) => `user:${id}`;
 
-/**
- * Recompute the shared pool snapshot and push it to every subscriber.
- * The server is the single source of truth — clients never mutate state
- * locally beyond their own in-flight prediction, which `pool:sync` reconciles.
- *
- * Event convention is `namespace:action`:
- *   pool:sync          full shared snapshot (authoritative)
- *   leaderboard:update ranked players
- *   pot:update         pot value + contributors
- *   players:update     roster
- *   match:update       a single changed fixture (drives status/lock animations)
- */
-export function pushPoolUpdate(io, poolId, changedNum = null) {
-  const shared = buildState(poolId, null);
-  if (!shared) return;
-  const r = room(poolId);
-  io.to(r).emit('pool:sync', shared);
-  io.to(r).emit('leaderboard:update', shared.leaderboard);
-  io.to(r).emit('pot:update', shared.pot);
-  io.to(r).emit('players:update', shared.players);
-  if (changedNum != null) {
-    const m = shared.matches.find((x) => x.num === changedNum);
-    if (m) io.to(r).emit('match:update', m);
-  }
+function liveOf(num) {
+  const l = getLive(num);
+  return { homeGoals: l.home_goals, awayGoals: l.away_goals, minute: l.minute, phase: l.phase };
+}
+
+export function pushPool(io, poolId) {
+  const s = poolStanding(poolId);
+  if (s) io.to(poolRoom(poolId)).emit('pool:update', s);
+}
+
+export function pushFixtureBoards(io, num) {
+  for (const p of poolsForFixture(num)) pushPool(io, p.id);
+}
+
+// Score change → fixture room gets the score; everyone gets a light list update.
+export function pushFixture(io, num) {
+  const f = getFixture(num);
+  if (!f) return;
+  const payload = {
+    fixtureNum: num, status: f.status,
+    homeScore: f.home_score, awayScore: f.away_score, penWinner: f.pen_winner,
+    home: f.home, away: f.away, live: liveOf(num),
+  };
+  io.to(fixtureRoom(num)).emit('match:scoreUpdate', payload);
+  io.emit('fixtures:update', payload);
+}
+
+export function pushUserEarnings(io, userId) {
+  const u = getUserById(userId);
+  io.to(userRoom(userId)).emit('user:earnings', { total: totalEarnings(userId), balance: u?.balance ?? 0 });
 }

@@ -1,28 +1,25 @@
 import { Router } from 'express';
-import { verifyPin, signHostToken, verifyHostToken } from './auth.js';
-import { checkLimit, recordFail, recordSuccess } from './ratelimit.js';
-import { pushPoolUpdate } from './realtime.js';
-import { syncEnabled, activeProvider, runSync } from './sync.js';
 import {
-  createPool,
-  joinPool,
-  getPoolByCode,
-  getPlayerByToken,
-  buildState,
-  submitPrediction,
-  enterResult,
-  clearResult,
-  setMatchLock,
-  setPlayerPaid,
-  removePlayer,
-  updateSettings,
-  createCustomBet,
-  updateCustomBet,
-  deleteCustomBet,
-  answerCustomBet,
-  httpError,
+  register, login, publicUser, getUserById,
+  createSession, userForSession, destroySession,
+} from './users.js';
+import { verifyAdminPin } from './auth.js';
+import { checkLimit, recordFail, recordSuccess } from './ratelimit.js';
+import {
+  allFixtures, getFixture, getLive, isLocked, winnerOptions, sourceLabel, resolveKnockouts,
+} from './tournament.js';
+import {
+  poolsForFixture, getPool, userEntry, poolStanding, enterPool, effectiveStatus,
+  entrantCountsByFixture, entrantCountsForFixture,
 } from './pools.js';
+import { teamMap } from './fixtures.js';
+import { confirmResult } from './settlement.js';
+import { setLiveScore } from './liveboard.js';
+import { totalEarnings, breakdown } from './earnings.js';
+import { pushPool, pushFixture, pushFixtureBoards, pushUserEarnings } from './realtime.js';
+import { httpError } from './util.js';
 
+const COOKIE = 'ubet_session';
 const wrap = (fn) => async (req, res) => {
   try {
     await fn(req, res);
@@ -33,184 +30,184 @@ const wrap = (fn) => async (req, res) => {
   }
 };
 
+function teamObj(tmap, code) {
+  if (!code) return null;
+  const t = tmap.get(code);
+  return t ? { code: t.code, name: t.name, flag: t.flag } : { code, name: code, flag: '🏳️' };
+}
+
 export function createApiRouter(io) {
   const r = Router();
+  const tmap = teamMap();
 
-  // ── middleware ──
-  const resolvePool = (req, _res, next) => {
-    const pool = getPoolByCode(req.params.code);
-    if (!pool) return next(httpError(404, 'Pool not found'));
-    req.pool = pool;
+  // ── card builders ──
+  function fixtureCard(f, entrantCounts) {
+    const live = getLive(f.num);
+    return {
+      num: f.num, stage: f.stage, round: f.round, group: f.group_name, matchday: f.matchday,
+      knockout: !!f.knockout, kickoff: f.kickoff, status: f.status,
+      homeTeam: teamObj(tmap, f.home), awayTeam: teamObj(tmap, f.away),
+      homeLabel: f.home ? (tmap.get(f.home)?.name || f.home) : sourceLabel(f.home_source),
+      awayLabel: f.away ? (tmap.get(f.away)?.name || f.away) : sourceLabel(f.away_source),
+      homeScore: f.home_score, awayScore: f.away_score, penWinner: f.pen_winner,
+      locked: isLocked(f),
+      live: { homeGoals: live.home_goals, awayGoals: live.away_goals, minute: live.minute, phase: live.phase },
+      entrants: entrantCounts.get(f.num) || 0,
+    };
+  }
+
+  function poolSummary(pool, fixture, counts, userId) {
+    const n = counts.get(pool.id) || 0;
+    return {
+      id: pool.id, type: pool.type, name: pool.name, mechanic: pool.mechanic, fee: pool.fee,
+      status: effectiveStatus(pool, fixture), entrantCount: n, pot: n * pool.fee,
+      entered: userId ? !!userEntry(pool.id, userId) : false,
+    };
+  }
+
+  // ── auth middleware ──
+  const requireUser = (req, _res, next) => {
+    const u = userForSession(req.cookies?.[COOKIE]);
+    if (!u) return next(httpError(401, 'Please log in'));
+    req.user = u;
     next();
   };
-
-  const requirePlayer = (req, _res, next) => {
-    const token = req.get('x-player-token');
-    const player = getPlayerByToken(token);
-    if (!player || player.pool_id !== req.pool.id) return next(httpError(401, 'Not a member of this pool'));
-    req.player = player;
-    next();
-  };
-
-  const clientIp = (req) => req.ip || req.socket?.remoteAddress || 'unknown';
-
-  // Verify a PIN with brute-force protection (lockout after repeated failures).
-  const verifyPinGated = (req) => {
-    const key = `${req.pool.id}:${clientIp(req)}`;
+  const requireAdmin = (req, _res, next) => {
+    const key = `admin:${req.ip}`;
     const { allowed, retryAfter } = checkLimit(key);
-    if (!allowed) throw httpError(429, `Too many attempts — try again in ${retryAfter}s`);
-    const ok = verifyPin(req.get('x-host-pin') || req.body?.pin, req.pool.pin_hash, req.pool.pin_salt);
-    if (ok) recordSuccess(key);
-    else recordFail(key);
-    return ok;
+    if (!allowed) return next(httpError(429, `Too many attempts — wait ${retryAfter}s`));
+    if (!verifyAdminPin(req.get('x-admin-pin'))) {
+      recordFail(key);
+      return next(httpError(403, 'Invalid admin PIN'));
+    }
+    recordSuccess(key);
+    next();
   };
+  const setCookie = (res, token, maxAgeMs) =>
+    res.cookie(COOKIE, token, {
+      httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production',
+      maxAge: maxAgeMs, path: '/',
+    });
 
-  // Host actions accept a short-lived host token (preferred) or a PIN fallback.
-  const requireHost = (req, _res, next) => {
-    if (verifyHostToken(req.pool.id, req.get('x-host-token'))) return next();
-    if (verifyPinGated(req)) return next();
-    next(httpError(403, 'Invalid or expired host session'));
-  };
-
-  // ── public ──
+  // ── auth ──
   r.get('/health', (_req, res) => res.json({ ok: true }));
 
-  r.get('/config', (_req, res) =>
-    res.json({
-      defaultBuyIn: Number(process.env.DEFAULT_BUY_IN) || 20,
-      defaultCurrency: process.env.DEFAULT_CURRENCY || 'USD',
-      sync: { enabled: syncEnabled(), provider: activeProvider()?.label || null },
-    }),
-  );
+  r.post('/auth/register', wrap((req, res) => {
+    const { email, password, displayName } = req.body || {};
+    const user = register({ email, password, displayName });
+    const { token, maxAgeMs } = createSession(user.id);
+    setCookie(res, token, maxAgeMs);
+    res.status(201).json({ user: publicUser(user) });
+  }));
 
-  r.post('/pools', wrap((req, res) => {
-    const { name, buyIn, currency, rules, pin, hostName, manual } = req.body || {};
-    if (!pin || String(pin).length < 4) throw httpError(400, 'Host PIN must be at least 4 digits');
-    // When a live provider is configured, new pools auto-sync results unless the
-    // host explicitly opts into manual result entry.
-    const synced = syncEnabled() && !manual;
-    const { pool, host } = createPool({ name, buyIn, currency, rules, pin, hostName, synced });
-    res.status(201).json({
-      pool: { code: pool.code, name: pool.name },
-      token: host.token,
-      playerId: host.id,
-      isHost: true,
+  r.post('/auth/login', wrap((req, res) => {
+    const key = `login:${req.ip}`;
+    const { allowed, retryAfter } = checkLimit(key);
+    if (!allowed) throw httpError(429, `Too many attempts — wait ${retryAfter}s`);
+    let user;
+    try {
+      user = login(req.body || {});
+    } catch (e) {
+      recordFail(key);
+      throw e;
+    }
+    recordSuccess(key);
+    const { token, maxAgeMs } = createSession(user.id);
+    setCookie(res, token, maxAgeMs);
+    res.json({ user: publicUser(user) });
+  }));
+
+  r.post('/auth/logout', wrap((req, res) => {
+    destroySession(req.cookies?.[COOKIE]);
+    res.clearCookie(COOKIE, { path: '/' });
+    res.json({ ok: true });
+  }));
+
+  r.get('/auth/me', wrap((req, res) => {
+    const u = userForSession(req.cookies?.[COOKIE]);
+    res.json({ user: u ? publicUser(u) : null });
+  }));
+
+  // ── fixtures ──
+  r.get('/fixtures', wrap((req, res) => {
+    const counts = entrantCountsByFixture();
+    res.json({ fixtures: allFixtures().map((f) => fixtureCard(f, counts)) });
+  }));
+
+  r.get('/fixtures/:num', wrap((req, res) => {
+    const num = Number(req.params.num);
+    const f = getFixture(num);
+    if (!f) throw httpError(404, 'Fixture not found');
+    const u = userForSession(req.cookies?.[COOKIE]);
+    const counts = entrantCountsForFixture(num);
+    const pools = poolsForFixture(num).map((p) => poolSummary(p, f, counts, u?.id));
+    res.json({
+      fixture: fixtureCard(f, new Map([[num, [...counts.values()].reduce((s, n) => s + n, 0)]])),
+      pools,
+      winnerOptions: winnerOptions(f),
     });
   }));
 
-  // lightweight preview for the join screen
-  r.get('/pools/:code', resolvePool, wrap((req, res) => {
+  // ── pools ──
+  r.get('/pools/:id', wrap((req, res) => {
+    const pool = getPool(req.params.id);
+    if (!pool) throw httpError(404, 'Pool not found');
+    const f = getFixture(pool.fixture_num);
+    const u = userForSession(req.cookies?.[COOKIE]);
+    const standing = poolStanding(pool.id);
     res.json({
-      code: req.pool.code,
-      name: req.pool.name,
-      buyIn: req.pool.buy_in,
-      currency: req.pool.currency,
-      status: req.pool.status,
+      standing,
+      fixture: fixtureCard(f, new Map()),
+      myEntry: u ? userEntry(pool.id, u.id) : null,
+      winnerOptions: winnerOptions(f),
+      me: u ? u.id : null,
     });
   }));
 
-  r.post('/pools/:code/join', resolvePool, wrap((req, res) => {
-    const { displayName } = req.body || {};
-    const { player } = joinPool({ code: req.pool.code, displayName });
-    pushPoolUpdate(io, req.pool.id);
-    res.status(201).json({ token: player.token, playerId: player.id, isHost: false });
+  r.post('/pools/:id/enter', requireUser, wrap((req, res) => {
+    const entry = enterPool({ userId: req.user.id, poolId: req.params.id, pred: req.body?.pred });
+    const pool = getPool(req.params.id);
+    pushPool(io, pool.id);
+    pushFixture(io, pool.fixture_num);
+    pushUserEarnings(io, req.user.id);
+    res.status(201).json({ entry, balance: getUserById(req.user.id).balance });
   }));
 
-  r.get('/pools/:code/state', resolvePool, wrap((req, res) => {
-    const player = getPlayerByToken(req.get('x-player-token'));
-    const viewerId = player && player.pool_id === req.pool.id ? player.id : null;
-    res.json(buildState(req.pool.id, viewerId));
+  // ── earnings ──
+  r.get('/me/earnings', requireUser, wrap((req, res) => {
+    res.json({ total: totalEarnings(req.user.id), balance: getUserById(req.user.id).balance });
+  }));
+  r.get('/me/earnings/breakdown', requireUser, wrap((req, res) => {
+    res.json(breakdown(req.user.id));
   }));
 
-  // Exchange the PIN (once) for a short-lived host-session token. Rate-limited.
-  r.post('/pools/:code/host-session', resolvePool, wrap((req, res) => {
-    if (!verifyPinGated(req)) throw httpError(403, 'Invalid host PIN');
-    const { token, expiresAt } = signHostToken(req.pool.id);
-    res.json({ ok: true, hostToken: token, expiresAt });
+  // ── admin (PIN-gated) ──
+  r.post('/admin/check', requireAdmin, (_req, res) => res.json({ ok: true }));
+
+  r.post('/admin/fixtures/:num/live', requireAdmin, wrap((req, res) => {
+    const num = Number(req.params.num);
+    const { homeGoals, awayGoals, minute, phase } = req.body || {};
+    setLiveScore({ fixtureNum: num, homeGoals, awayGoals, minute, phase });
+    pushFixture(io, num);
+    pushFixtureBoards(io, num);
+    res.json({ ok: true, live: getLive(num) });
   }));
 
-  // ── player actions ──
-  r.post('/pools/:code/predictions', resolvePool, requirePlayer, wrap((req, res) => {
-    const { num, home, away } = req.body || {};
-    const pred = submitPrediction({ poolId: req.pool.id, playerId: req.player.id, num: Number(num), home, away });
-    pushPoolUpdate(io, req.pool.id, Number(num));
-    res.json({ num: Number(num), home: pred.home_pred, away: pred.away_pred, points: pred.points });
-  }));
-
-  // ── host actions (PIN-gated) ──
-  r.post('/pools/:code/results', resolvePool, requireHost, wrap((req, res) => {
-    const { num, homeScore, awayScore, penWinner } = req.body || {};
-    enterResult({ poolId: req.pool.id, num: Number(num), homeScore, awayScore, penWinner });
-    pushPoolUpdate(io, req.pool.id, Number(num));
+  r.post('/admin/fixtures/:num/result', requireAdmin, wrap((req, res) => {
+    const num = Number(req.params.num);
+    const { homeScore, awayScore, penWinner } = req.body || {};
+    const { affectedUsers } = confirmResult({ fixtureNum: num, homeScore, awayScore, penWinner });
+    pushFixture(io, num);
+    pushFixtureBoards(io, num);
+    for (const uid of affectedUsers) pushUserEarnings(io, uid);
     res.json({ ok: true });
   }));
 
-  r.delete('/pools/:code/results/:num', resolvePool, requireHost, wrap((req, res) => {
-    clearResult({ poolId: req.pool.id, num: Number(req.params.num) });
-    pushPoolUpdate(io, req.pool.id, Number(req.params.num));
+  r.post('/admin/resolve-knockouts', requireAdmin, wrap((_req, res) => {
+    resolveKnockouts();
     res.json({ ok: true });
   }));
 
-  r.post('/pools/:code/matches/:num/lock', resolvePool, requireHost, wrap((req, res) => {
-    setMatchLock({ poolId: req.pool.id, num: Number(req.params.num), locked: !!req.body?.locked });
-    pushPoolUpdate(io, req.pool.id, Number(req.params.num));
-    res.json({ ok: true });
-  }));
-
-  r.post('/pools/:code/players/:id/paid', resolvePool, requireHost, wrap((req, res) => {
-    setPlayerPaid(req.pool.id, req.params.id, !!req.body?.paid);
-    pushPoolUpdate(io, req.pool.id);
-    res.json({ ok: true });
-  }));
-
-  r.delete('/pools/:code/players/:id', resolvePool, requireHost, wrap((req, res) => {
-    removePlayer(req.pool.id, req.params.id);
-    pushPoolUpdate(io, req.pool.id);
-    res.json({ ok: true });
-  }));
-
-  r.patch('/pools/:code/settings', resolvePool, requireHost, wrap((req, res) => {
-    const { name, buyIn, currency, rules } = req.body || {};
-    updateSettings({ poolId: req.pool.id, name, buyIn, currency, rules });
-    pushPoolUpdate(io, req.pool.id);
-    res.json({ ok: true });
-  }));
-
-  // ── custom bets (pool-level prop bets) ──
-  r.post('/pools/:code/custom-bets', resolvePool, requireHost, wrap((req, res) => {
-    const { question, options, points, locksAt } = req.body || {};
-    const bet = createCustomBet({ poolId: req.pool.id, question, options, points, locksAt });
-    pushPoolUpdate(io, req.pool.id);
-    res.status(201).json({ id: bet.id });
-  }));
-
-  r.patch('/pools/:code/custom-bets/:id', resolvePool, requireHost, wrap((req, res) => {
-    const { question, options, points, answer, locksAt } = req.body || {};
-    updateCustomBet({ poolId: req.pool.id, betId: req.params.id, question, options, points, answer, locksAt });
-    pushPoolUpdate(io, req.pool.id);
-    res.json({ ok: true });
-  }));
-
-  r.delete('/pools/:code/custom-bets/:id', resolvePool, requireHost, wrap((req, res) => {
-    deleteCustomBet({ poolId: req.pool.id, betId: req.params.id });
-    pushPoolUpdate(io, req.pool.id);
-    res.json({ ok: true });
-  }));
-
-  r.post('/pools/:code/custom-bets/:id/answer', resolvePool, requirePlayer, wrap((req, res) => {
-    answerCustomBet({ poolId: req.pool.id, betId: req.params.id, playerId: req.player.id, answer: req.body?.answer });
-    pushPoolUpdate(io, req.pool.id);
-    res.json({ ok: true });
-  }));
-
-  // Force an immediate pull from the live provider (host-gated).
-  r.post('/pools/:code/resync', resolvePool, requireHost, wrap(async (_req, res) => {
-    if (!syncEnabled()) throw httpError(409, 'Live sync is not enabled on this server');
-    const result = await runSync(io, { force: true });
-    res.json(result);
-  }));
-
-  // JSON error handler — catches errors passed via next() from middleware.
   r.use((err, _req, res, _next) => {
     const status = err.status || 500;
     if (status >= 500) console.error(err);

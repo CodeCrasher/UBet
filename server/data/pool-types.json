@@ -1,0 +1,7 @@
+[
+  { "type": "WINNER_BIG",   "name": "Winner Pool · Big",   "mechanic": "Pick the match winner",                      "input": "WINNER", "fee": 1000, "rake": 0, "cap": null },
+  { "type": "EXACT",        "name": "Exact Score Pool",     "mechanic": "Predict the exact final scoreline",          "input": "EXACT",  "fee": 500,  "rake": 0, "cap": null },
+  { "type": "WINNER_SMALL", "name": "Winner Pool · Small",  "mechanic": "Pick the match winner",                      "input": "WINNER", "fee": 500,  "rake": 0, "cap": null },
+  { "type": "TOTAL",        "name": "Total Goals Pool",     "mechanic": "Predict the exact total combined goals",     "input": "TOTAL",  "fee": 500,  "rake": 0, "cap": null },
+  { "type": "MARGIN",       "name": "Margin Pool",          "mechanic": "Pick the winner and exact winning margin",   "input": "MARGIN", "fee": 750,  "rake": 0, "cap": null }
+]

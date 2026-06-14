@@ -1,33 +1,34 @@
-import { getPoolByCode, getPlayerByToken, buildState } from './pools.js';
-import { room } from './realtime.js';
+import { userForSession } from './users.js';
+import { poolStanding } from './pools.js';
+import { poolRoom, fixtureRoom, userRoom } from './realtime.js';
 
-/**
- * Wire up Socket.io. Clients subscribe with a room code (+ optional player
- * token); we validate, join them to the pool room, and push the full
- * viewer-specific snapshot. All subsequent updates arrive via realtime.js.
- */
+function cookieValue(header, name) {
+  if (!header) return null;
+  for (const part of header.split(';')) {
+    const [k, ...v] = part.trim().split('=');
+    if (k === name) return decodeURIComponent(v.join('='));
+  }
+  return null;
+}
+
 export function attachSockets(io) {
   io.on('connection', (socket) => {
-    socket.on('pool:subscribe', ({ code, token } = {}) => {
-      const pool = getPoolByCode(code);
-      if (!pool) {
-        socket.emit('pool:error', { message: 'Pool not found' });
-        return;
-      }
-      let viewerId = null;
-      if (token) {
-        const player = getPlayerByToken(token);
-        if (player && player.pool_id === pool.id) viewerId = player.id;
-      }
-      // leave any previously-joined pool rooms
-      for (const r of socket.rooms) {
-        if (r.startsWith('pool:')) socket.leave(r);
-      }
-      socket.join(room(pool.id));
-      socket.data.poolId = pool.id;
-      socket.emit('pool:state', buildState(pool.id, viewerId));
-    });
+    // Authenticate from the session cookie so user-targeted pushes can reach them.
+    const token = cookieValue(socket.handshake.headers.cookie, 'ubet_session');
+    const user = userForSession(token);
+    if (user) socket.join(userRoom(user.id));
 
-    socket.on('pool:ping', () => socket.emit('pool:pong', { t: Date.now() }));
+    socket.on('fixture:subscribe', ({ num } = {}) => {
+      if (num != null) socket.join(fixtureRoom(Number(num)));
+    });
+    socket.on('pool:subscribe', ({ poolId } = {}) => {
+      if (!poolId) return;
+      socket.join(poolRoom(poolId));
+      const s = poolStanding(poolId);
+      if (s) socket.emit('pool:update', s);
+    });
+    socket.on('pool:unsubscribe', ({ poolId } = {}) => {
+      if (poolId) socket.leave(poolRoom(poolId));
+    });
   });
 }

@@ -6,34 +6,35 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { initFixtures } from './fixtures.js';
+import { loadFixtures, resolveKnockouts } from './tournament.js';
+import { seedPools } from './pools.js';
 import { attachSockets } from './sockets.js';
 import { createApiRouter } from './routes.js';
-import { pushPoolUpdate, room } from './realtime.js';
-import { startSync } from './sync.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
 const PORT = Number(process.env.PORT) || 8080;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
-await initFixtures();
+// Boot: load fixtures + pre-seed every fixture's five pools (idempotent).
+loadFixtures();
+resolveKnockouts();
+seedPools();
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN.split(',').map((s) => s.trim()) },
+  cors: { origin: CORS_ORIGIN === '*' ? true : CORS_ORIGIN.split(',').map((s) => s.trim()), credentials: true },
 });
 
 app.use(compression());
 
-// Security headers (dependency-free). CSP is tuned for the SPA: same-origin
-// scripts, Google Fonts, data: favicon, and same-origin websockets.
-app.use((req, res, next) => {
+// Security headers + CSP tuned for the SPA (same-origin scripts, Google Fonts,
+// data: favicon, same-origin websockets).
+app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('X-DNS-Prefetch-Control', 'off');
   res.setHeader(
     'Content-Security-Policy',
     [
@@ -50,13 +51,23 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json({ limit: '256kb' }));
+// Minimal cookie parser (no dependency).
+app.use((req, _res, next) => {
+  req.cookies = {};
+  const header = req.headers.cookie;
+  if (header) {
+    for (const part of header.split(';')) {
+      const i = part.indexOf('=');
+      if (i > -1) req.cookies[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    }
+  }
+  next();
+});
 
+app.use(express.json({ limit: '256kb' }));
 app.use('/api', createApiRouter(io));
 attachSockets(io);
-startSync(io);
 
-// Serve the built SPA in production; in dev the Vite server handles the client.
 if (existsSync(DIST)) {
   app.use(express.static(DIST));
   app.get('*', (req, res, next) => {
@@ -64,29 +75,12 @@ if (existsSync(DIST)) {
     res.sendFile(join(DIST, 'index.html'));
   });
 } else {
-  app.get('/', (_req, res) =>
-    res.status(200).send('UBet API is running. Run `npm run dev` for the client, or `npm run build` then `npm start`.'),
-  );
+  app.get('/', (_req, res) => res.status(200).send('UBet API running. Run `npm run dev` or `npm run build`.'));
 }
-
-// Lightweight ticker: every 30s, re-push state to active pool rooms so that
-// matches crossing their kickoff time lock for everyone without a refresh.
-const TICK_MS = 30_000;
-setInterval(() => {
-  const rooms = io.sockets.adapter.rooms;
-  const seen = new Set();
-  for (const [name] of rooms) {
-    if (!name.startsWith('pool:')) continue;
-    const poolId = name.slice('pool:'.length);
-    if (seen.has(poolId)) continue;
-    seen.add(poolId);
-    pushPoolUpdate(io, poolId);
-  }
-}, TICK_MS).unref();
 
 server.listen(PORT, () => {
   console.log(`⚽ UBet listening on http://localhost:${PORT}`);
   if (!existsSync(DIST)) console.log('   (client not built — run `npm run dev` or `npm run build`)');
 });
 
-export { app, server, io, room };
+export { app, server, io };
