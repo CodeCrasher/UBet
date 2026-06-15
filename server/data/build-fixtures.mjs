@@ -6,12 +6,10 @@
 //
 // Run: npm run build:fixtures  (also runs on postinstall)
 //
-// NOTE: group assignments are a plausible seeded snapshot, not the official
-// FIFA draw. The 8-best-thirds routing into the Round of 32 is a documented
-// simplification (assigned by group letter, not the official lookup table).
-// A pool host can edit/lock any fixture manually in the app. To use the real
-// draw, replace this generator's TEAMS table or point FIXTURES_API_URL at a
-// live source returning the same JSON shape.
+// NOTE: group assignments reflect the official FIFA World Cup 2026 draw
+// (December 5, 2025). The 8-best-thirds routing into the Round of 32 is a
+// documented simplification (assigned by group letter, not the official lookup
+// table). A pool host can edit/lock any fixture manually in the app.
 
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -20,19 +18,20 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // 48 teams across 12 groups (A–L). { code, name, group, flag }
+// Official FIFA World Cup 2026 draw (December 5, 2025).
 const TEAMS = [
-  ['MEX', 'Mexico', 'A', '🇲🇽'], ['CRO', 'Croatia', 'A', '🇭🇷'], ['NGA', 'Nigeria', 'A', '🇳🇬'], ['UZB', 'Uzbekistan', 'A', '🇺🇿'],
-  ['CAN', 'Canada', 'B', '🇨🇦'], ['BEL', 'Belgium', 'B', '🇧🇪'], ['EGY', 'Egypt', 'B', '🇪🇬'], ['NZL', 'New Zealand', 'B', '🇳🇿'],
-  ['USA', 'United States', 'C', '🇺🇸'], ['SUI', 'Switzerland', 'C', '🇨🇭'], ['GHA', 'Ghana', 'C', '🇬🇭'], ['QAT', 'Qatar', 'C', '🇶🇦'],
-  ['ARG', 'Argentina', 'D', '🇦🇷'], ['NOR', 'Norway', 'D', '🇳🇴'], ['CIV', 'Ivory Coast', 'D', '🇨🇮'], ['PAN', 'Panama', 'D', '🇵🇦'],
-  ['FRA', 'France', 'E', '🇫🇷'], ['DEN', 'Denmark', 'E', '🇩🇰'], ['SEN', 'Senegal', 'E', '🇸🇳'], ['KSA', 'Saudi Arabia', 'E', '🇸🇦'],
-  ['BRA', 'Brazil', 'F', '🇧🇷'], ['AUT', 'Austria', 'F', '🇦🇹'], ['CMR', 'Cameroon', 'F', '🇨🇲'], ['CRC', 'Costa Rica', 'F', '🇨🇷'],
-  ['ENG', 'England', 'G', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], ['SRB', 'Serbia', 'G', '🇷🇸'], ['ALG', 'Algeria', 'G', '🇩🇿'], ['IRQ', 'Iraq', 'G', '🇮🇶'],
-  ['ESP', 'Spain', 'H', '🇪🇸'], ['UKR', 'Ukraine', 'H', '🇺🇦'], ['TUN', 'Tunisia', 'H', '🇹🇳'], ['JAM', 'Jamaica', 'H', '🇯🇲'],
-  ['POR', 'Portugal', 'I', '🇵🇹'], ['POL', 'Poland', 'I', '🇵🇱'], ['KOR', 'South Korea', 'I', '🇰🇷'], ['BOL', 'Bolivia', 'I', '🇧🇴'],
-  ['NED', 'Netherlands', 'J', '🇳🇱'], ['ECU', 'Ecuador', 'J', '🇪🇨'], ['JPN', 'Japan', 'J', '🇯🇵'], ['COD', 'DR Congo', 'J', '🇨🇩'],
-  ['GER', 'Germany', 'K', '🇩🇪'], ['COL', 'Colombia', 'K', '🇨🇴'], ['IRN', 'Iran', 'K', '🇮🇷'], ['PAR', 'Paraguay', 'K', '🇵🇾'],
-  ['ITA', 'Italy', 'L', '🇮🇹'], ['URU', 'Uruguay', 'L', '🇺🇾'], ['AUS', 'Australia', 'L', '🇦🇺'], ['MAR', 'Morocco', 'L', '🇲🇦'],
+  ['MEX', 'Mexico',              'A', '🇲🇽'], ['RSA', 'South Africa',       'A', '🇿🇦'], ['KOR', 'South Korea',        'A', '🇰🇷'], ['CZE', 'Czech Republic',     'A', '🇨🇿'],
+  ['CAN', 'Canada',              'B', '🇨🇦'], ['BIH', 'Bosnia & Herzegovina','B', '🇧🇦'], ['QAT', 'Qatar',              'B', '🇶🇦'], ['SUI', 'Switzerland',        'B', '🇨🇭'],
+  ['BRA', 'Brazil',              'C', '🇧🇷'], ['MAR', 'Morocco',             'C', '🇲🇦'], ['HAI', 'Haiti',              'C', '🇭🇹'], ['SCO', 'Scotland',           'C', '🏴󠁧󠁢󠁳󠁣󠁴󠁿'],
+  ['USA', 'United States',       'D', '🇺🇸'], ['PAR', 'Paraguay',            'D', '🇵🇾'], ['AUS', 'Australia',          'D', '🇦🇺'], ['TUR', 'Turkey',             'D', '🇹🇷'],
+  ['GER', 'Germany',             'E', '🇩🇪'], ['CUW', 'Curaçao',            'E', '🇨🇼'], ['CIV', 'Ivory Coast',        'E', '🇨🇮'], ['ECU', 'Ecuador',            'E', '🇪🇨'],
+  ['NED', 'Netherlands',         'F', '🇳🇱'], ['JPN', 'Japan',               'F', '🇯🇵'], ['SWE', 'Sweden',             'F', '🇸🇪'], ['TUN', 'Tunisia',            'F', '🇹🇳'],
+  ['BEL', 'Belgium',             'G', '🇧🇪'], ['EGY', 'Egypt',               'G', '🇪🇬'], ['IRN', 'Iran',               'G', '🇮🇷'], ['NZL', 'New Zealand',        'G', '🇳🇿'],
+  ['ESP', 'Spain',               'H', '🇪🇸'], ['CPV', 'Cape Verde',          'H', '🇨🇻'], ['KSA', 'Saudi Arabia',       'H', '🇸🇦'], ['URU', 'Uruguay',            'H', '🇺🇾'],
+  ['FRA', 'France',              'I', '🇫🇷'], ['SEN', 'Senegal',             'I', '🇸🇳'], ['IRQ', 'Iraq',               'I', '🇮🇶'], ['NOR', 'Norway',             'I', '🇳🇴'],
+  ['ARG', 'Argentina',           'J', '🇦🇷'], ['ALG', 'Algeria',             'J', '🇩🇿'], ['AUT', 'Austria',            'J', '🇦🇹'], ['JOR', 'Jordan',             'J', '🇯🇴'],
+  ['POR', 'Portugal',            'K', '🇵🇹'], ['COD', 'DR Congo',            'K', '🇨🇩'], ['UZB', 'Uzbekistan',         'K', '🇺🇿'], ['COL', 'Colombia',           'K', '🇨🇴'],
+  ['ENG', 'England',             'L', '🏴󠁧󠁢󠁥󠁮󠁧󠁿'], ['CRO', 'Croatia',             'L', '🇭🇷'], ['GHA', 'Ghana',              'L', '🇬🇭'], ['PAN', 'Panama',             'L', '🇵🇦'],
 ].map(([code, name, group, flag]) => ({ code, name, group, flag }));
 
 const GROUPS = [...new Set(TEAMS.map((t) => t.group))]; // A..L
@@ -178,7 +177,7 @@ const out = {
   tournament: 'FIFA World Cup 2026',
   hosts: ['USA', 'CAN', 'MEX'],
   generatedBy: 'build-fixtures.mjs',
-  note: 'Seeded snapshot — group draw is plausible, not official. Hosts can edit/lock any fixture in-app.',
+  note: 'Official FIFA World Cup 2026 group draw (December 5, 2025). Hosts can edit/lock any fixture in-app.',
   teams: TEAMS,
   matches,
 };

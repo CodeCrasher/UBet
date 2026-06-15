@@ -6,7 +6,7 @@
     "MEX"
   ],
   "generatedBy": "build-fixtures.mjs",
-  "note": "Seeded snapshot — group draw is plausible, not official. Hosts can edit/lock any fixture in-app.",
+  "note": "Official FIFA World Cup 2026 group draw (December 5, 2025). Hosts can edit/lock any fixture in-app.",
   "teams": [
     {
       "code": "MEX",
@@ -15,22 +15,22 @@
       "flag": "🇲🇽"
     },
     {
-      "code": "CRO",
-      "name": "Croatia",
+      "code": "RSA",
+      "name": "South Africa",
       "group": "A",
-      "flag": "🇭🇷"
+      "flag": "🇿🇦"
     },
     {
-      "code": "NGA",
-      "name": "Nigeria",
+      "code": "KOR",
+      "name": "South Korea",
       "group": "A",
-      "flag": "🇳🇬"
+      "flag": "🇰🇷"
     },
     {
-      "code": "UZB",
-      "name": "Uzbekistan",
+      "code": "CZE",
+      "name": "Czech Republic",
       "group": "A",
-      "flag": "🇺🇿"
+      "flag": "🇨🇿"
     },
     {
       "code": "CAN",
@@ -39,142 +39,142 @@
       "flag": "🇨🇦"
     },
     {
+      "code": "BIH",
+      "name": "Bosnia & Herzegovina",
+      "group": "B",
+      "flag": "🇧🇦"
+    },
+    {
+      "code": "QAT",
+      "name": "Qatar",
+      "group": "B",
+      "flag": "🇶🇦"
+    },
+    {
+      "code": "SUI",
+      "name": "Switzerland",
+      "group": "B",
+      "flag": "🇨🇭"
+    },
+    {
+      "code": "BRA",
+      "name": "Brazil",
+      "group": "C",
+      "flag": "🇧🇷"
+    },
+    {
+      "code": "MAR",
+      "name": "Morocco",
+      "group": "C",
+      "flag": "🇲🇦"
+    },
+    {
+      "code": "HAI",
+      "name": "Haiti",
+      "group": "C",
+      "flag": "🇭🇹"
+    },
+    {
+      "code": "SCO",
+      "name": "Scotland",
+      "group": "C",
+      "flag": "🏴󠁧󠁢󠁳󠁣󠁴󠁿"
+    },
+    {
+      "code": "USA",
+      "name": "United States",
+      "group": "D",
+      "flag": "🇺🇸"
+    },
+    {
+      "code": "PAR",
+      "name": "Paraguay",
+      "group": "D",
+      "flag": "🇵🇾"
+    },
+    {
+      "code": "AUS",
+      "name": "Australia",
+      "group": "D",
+      "flag": "🇦🇺"
+    },
+    {
+      "code": "TUR",
+      "name": "Turkey",
+      "group": "D",
+      "flag": "🇹🇷"
+    },
+    {
+      "code": "GER",
+      "name": "Germany",
+      "group": "E",
+      "flag": "🇩🇪"
+    },
+    {
+      "code": "CUW",
+      "name": "Curaçao",
+      "group": "E",
+      "flag": "🇨🇼"
+    },
+    {
+      "code": "CIV",
+      "name": "Ivory Coast",
+      "group": "E",
+      "flag": "🇨🇮"
+    },
+    {
+      "code": "ECU",
+      "name": "Ecuador",
+      "group": "E",
+      "flag": "🇪🇨"
+    },
+    {
+      "code": "NED",
+      "name": "Netherlands",
+      "group": "F",
+      "flag": "🇳🇱"
+    },
+    {
+      "code": "JPN",
+      "name": "Japan",
+      "group": "F",
+      "flag": "🇯🇵"
+    },
+    {
+      "code": "SWE",
+      "name": "Sweden",
+      "group": "F",
+      "flag": "🇸🇪"
+    },
+    {
+      "code": "TUN",
+      "name": "Tunisia",
+      "group": "F",
+      "flag": "🇹🇳"
+    },
+    {
       "code": "BEL",
       "name": "Belgium",
-      "group": "B",
+      "group": "G",
       "flag": "🇧🇪"
     },
     {
       "code": "EGY",
       "name": "Egypt",
-      "group": "B",
+      "group": "G",
       "flag": "🇪🇬"
+    },
+    {
+      "code": "IRN",
+      "name": "Iran",
+      "group": "G",
+      "flag": "🇮🇷"
     },
     {
       "code": "NZL",
       "name": "New Zealand",
-      "group": "B",
+      "group": "G",
       "flag": "🇳🇿"
-    },
-    {
-      "code": "USA",
-      "name": "United States",
-      "group": "C",
-      "flag": "🇺🇸"
-    },
-    {
-      "code": "SUI",
-      "name": "Switzerland",
-      "group": "C",
-      "flag": "🇨🇭"
-    },
-    {
-      "code": "GHA",
-      "name": "Ghana",
-      "group": "C",
-      "flag": "🇬🇭"
-    },
-    {
-      "code": "QAT",
-      "name": "Qatar",
-      "group": "C",
-      "flag": "🇶🇦"
-    },
-    {
-      "code": "ARG",
-      "name": "Argentina",
-      "group": "D",
-      "flag": "🇦🇷"
-    },
-    {
-      "code": "NOR",
-      "name": "Norway",
-      "group": "D",
-      "flag": "🇳🇴"
-    },
-    {
-      "code": "CIV",
-      "name": "Ivory Coast",
-      "group": "D",
-      "flag": "🇨🇮"
-    },
-    {
-      "code": "PAN",
-      "name": "Panama",
-      "group": "D",
-      "flag": "🇵🇦"
-    },
-    {
-      "code": "FRA",
-      "name": "France",
-      "group": "E",
-      "flag": "🇫🇷"
-    },
-    {
-      "code": "DEN",
-      "name": "Denmark",
-      "group": "E",
-      "flag": "🇩🇰"
-    },
-    {
-      "code": "SEN",
-      "name": "Senegal",
-      "group": "E",
-      "flag": "🇸🇳"
-    },
-    {
-      "code": "KSA",
-      "name": "Saudi Arabia",
-      "group": "E",
-      "flag": "🇸🇦"
-    },
-    {
-      "code": "BRA",
-      "name": "Brazil",
-      "group": "F",
-      "flag": "🇧🇷"
-    },
-    {
-      "code": "AUT",
-      "name": "Austria",
-      "group": "F",
-      "flag": "🇦🇹"
-    },
-    {
-      "code": "CMR",
-      "name": "Cameroon",
-      "group": "F",
-      "flag": "🇨🇲"
-    },
-    {
-      "code": "CRC",
-      "name": "Costa Rica",
-      "group": "F",
-      "flag": "🇨🇷"
-    },
-    {
-      "code": "ENG",
-      "name": "England",
-      "group": "G",
-      "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
-    },
-    {
-      "code": "SRB",
-      "name": "Serbia",
-      "group": "G",
-      "flag": "🇷🇸"
-    },
-    {
-      "code": "ALG",
-      "name": "Algeria",
-      "group": "G",
-      "flag": "🇩🇿"
-    },
-    {
-      "code": "IRQ",
-      "name": "Iraq",
-      "group": "G",
-      "flag": "🇮🇶"
     },
     {
       "code": "ESP",
@@ -183,76 +183,88 @@
       "flag": "🇪🇸"
     },
     {
-      "code": "UKR",
-      "name": "Ukraine",
+      "code": "CPV",
+      "name": "Cape Verde",
       "group": "H",
-      "flag": "🇺🇦"
+      "flag": "🇨🇻"
     },
     {
-      "code": "TUN",
-      "name": "Tunisia",
+      "code": "KSA",
+      "name": "Saudi Arabia",
       "group": "H",
-      "flag": "🇹🇳"
+      "flag": "🇸🇦"
     },
     {
-      "code": "JAM",
-      "name": "Jamaica",
+      "code": "URU",
+      "name": "Uruguay",
       "group": "H",
-      "flag": "🇯🇲"
+      "flag": "🇺🇾"
+    },
+    {
+      "code": "FRA",
+      "name": "France",
+      "group": "I",
+      "flag": "🇫🇷"
+    },
+    {
+      "code": "SEN",
+      "name": "Senegal",
+      "group": "I",
+      "flag": "🇸🇳"
+    },
+    {
+      "code": "IRQ",
+      "name": "Iraq",
+      "group": "I",
+      "flag": "🇮🇶"
+    },
+    {
+      "code": "NOR",
+      "name": "Norway",
+      "group": "I",
+      "flag": "🇳🇴"
+    },
+    {
+      "code": "ARG",
+      "name": "Argentina",
+      "group": "J",
+      "flag": "🇦🇷"
+    },
+    {
+      "code": "ALG",
+      "name": "Algeria",
+      "group": "J",
+      "flag": "🇩🇿"
+    },
+    {
+      "code": "AUT",
+      "name": "Austria",
+      "group": "J",
+      "flag": "🇦🇹"
+    },
+    {
+      "code": "JOR",
+      "name": "Jordan",
+      "group": "J",
+      "flag": "🇯🇴"
     },
     {
       "code": "POR",
       "name": "Portugal",
-      "group": "I",
+      "group": "K",
       "flag": "🇵🇹"
-    },
-    {
-      "code": "POL",
-      "name": "Poland",
-      "group": "I",
-      "flag": "🇵🇱"
-    },
-    {
-      "code": "KOR",
-      "name": "South Korea",
-      "group": "I",
-      "flag": "🇰🇷"
-    },
-    {
-      "code": "BOL",
-      "name": "Bolivia",
-      "group": "I",
-      "flag": "🇧🇴"
-    },
-    {
-      "code": "NED",
-      "name": "Netherlands",
-      "group": "J",
-      "flag": "🇳🇱"
-    },
-    {
-      "code": "ECU",
-      "name": "Ecuador",
-      "group": "J",
-      "flag": "🇪🇨"
-    },
-    {
-      "code": "JPN",
-      "name": "Japan",
-      "group": "J",
-      "flag": "🇯🇵"
     },
     {
       "code": "COD",
       "name": "DR Congo",
-      "group": "J",
+      "group": "K",
       "flag": "🇨🇩"
     },
     {
-      "code": "GER",
-      "name": "Germany",
+      "code": "UZB",
+      "name": "Uzbekistan",
       "group": "K",
-      "flag": "🇩🇪"
+      "flag": "🇺🇿"
     },
     {
       "code": "COL",
@@ -261,40 +273,28 @@
       "flag": "🇨🇴"
     },
     {
-      "code": "IRN",
-      "name": "Iran",
-      "group": "K",
-      "flag": "🇮🇷"
-    },
-    {
-      "code": "PAR",
-      "name": "Paraguay",
-      "group": "K",
-      "flag": "🇵🇾"
-    },
-    {
-      "code": "ITA",
-      "name": "Italy",
+      "code": "ENG",
+      "name": "England",
       "group": "L",
-      "flag": "🇮🇹"
+      "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
     },
     {
-      "code": "URU",
-      "name": "Uruguay",
+      "code": "CRO",
+      "name": "Croatia",
       "group": "L",
-      "flag": "🇺🇾"
+      "flag": "🇭🇷"
     },
     {
-      "code": "AUS",
-      "name": "Australia",
+      "code": "GHA",
+      "name": "Ghana",
       "group": "L",
-      "flag": "🇦🇺"
+      "flag": "🇬🇭"
     },
     {
-      "code": "MAR",
-      "name": "Morocco",
+      "code": "PAN",
+      "name": "Panama",
       "group": "L",
-      "flag": "🇲🇦"
+      "flag": "🇵🇦"
     }
   ],
   "matches": [
@@ -305,7 +305,7 @@
       "group": "A",
       "matchday": 1,
       "home": "MEX",
-      "away": "CRO",
+      "away": "RSA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-11T16:00:00.000Z"
@@ -316,8 +316,8 @@
       "round": "Group A",
       "group": "A",
       "matchday": 1,
-      "home": "NGA",
-      "away": "UZB",
+      "home": "KOR",
+      "away": "CZE",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-11T19:00:00.000Z"
@@ -329,7 +329,7 @@
       "group": "A",
       "matchday": 2,
       "home": "MEX",
-      "away": "NGA",
+      "away": "KOR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-17T16:00:00.000Z"
@@ -340,8 +340,8 @@
       "round": "Group A",
       "group": "A",
       "matchday": 2,
-      "home": "UZB",
-      "away": "CRO",
+      "home": "CZE",
+      "away": "RSA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-17T19:00:00.000Z"
@@ -352,7 +352,7 @@
       "round": "Group A",
       "group": "A",
       "matchday": 3,
-      "home": "UZB",
+      "home": "CZE",
       "away": "MEX",
       "homeSource": null,
       "awaySource": null,
@@ -364,8 +364,8 @@
       "round": "Group A",
       "group": "A",
       "matchday": 3,
-      "home": "CRO",
-      "away": "NGA",
+      "home": "RSA",
+      "away": "KOR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-24T19:00:00.000Z"
@@ -377,7 +377,7 @@
       "group": "B",
       "matchday": 1,
       "home": "CAN",
-      "away": "BEL",
+      "away": "BIH",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-11T19:00:00.000Z"
@@ -388,8 +388,8 @@
       "round": "Group B",
       "group": "B",
       "matchday": 1,
-      "home": "EGY",
-      "away": "NZL",
+      "home": "QAT",
+      "away": "SUI",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-11T22:00:00.000Z"
@@ -401,7 +401,7 @@
       "group": "B",
       "matchday": 2,
       "home": "CAN",
-      "away": "EGY",
+      "away": "QAT",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-17T19:00:00.000Z"
@@ -412,8 +412,8 @@
       "round": "Group B",
       "group": "B",
       "matchday": 2,
-      "home": "NZL",
-      "away": "BEL",
+      "home": "SUI",
+      "away": "BIH",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-17T22:00:00.000Z"
@@ -424,7 +424,7 @@
       "round": "Group B",
       "group": "B",
       "matchday": 3,
-      "home": "NZL",
+      "home": "SUI",
       "away": "CAN",
       "homeSource": null,
       "awaySource": null,
@@ -436,8 +436,8 @@
       "round": "Group B",
       "group": "B",
       "matchday": 3,
-      "home": "BEL",
-      "away": "EGY",
+      "home": "BIH",
+      "away": "QAT",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-24T22:00:00.000Z"
@@ -448,8 +448,8 @@
       "round": "Group C",
       "group": "C",
       "matchday": 1,
-      "home": "USA",
-      "away": "SUI",
+      "home": "BRA",
+      "away": "MAR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-11T22:00:00.000Z"
@@ -460,8 +460,8 @@
       "round": "Group C",
       "group": "C",
       "matchday": 1,
-      "home": "GHA",
-      "away": "QAT",
+      "home": "HAI",
+      "away": "SCO",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-11T19:00:00.000Z"
@@ -472,8 +472,8 @@
       "round": "Group C",
       "group": "C",
       "matchday": 2,
-      "home": "USA",
-      "away": "GHA",
+      "home": "BRA",
+      "away": "HAI",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-17T22:00:00.000Z"
@@ -484,8 +484,8 @@
       "round": "Group C",
       "group": "C",
       "matchday": 2,
-      "home": "QAT",
-      "away": "SUI",
+      "home": "SCO",
+      "away": "MAR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-17T19:00:00.000Z"
@@ -496,8 +496,8 @@
       "round": "Group C",
       "group": "C",
       "matchday": 3,
-      "home": "QAT",
-      "away": "USA",
+      "home": "SCO",
+      "away": "BRA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-24T22:00:00.000Z"
@@ -508,8 +508,8 @@
       "round": "Group C",
       "group": "C",
       "matchday": 3,
-      "home": "SUI",
-      "away": "GHA",
+      "home": "MAR",
+      "away": "HAI",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-24T19:00:00.000Z"
@@ -520,8 +520,8 @@
       "round": "Group D",
       "group": "D",
       "matchday": 1,
-      "home": "ARG",
-      "away": "NOR",
+      "home": "USA",
+      "away": "PAR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-12T16:00:00.000Z"
@@ -532,8 +532,8 @@
       "round": "Group D",
       "group": "D",
       "matchday": 1,
-      "home": "CIV",
-      "away": "PAN",
+      "home": "AUS",
+      "away": "TUR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-12T19:00:00.000Z"
@@ -544,8 +544,8 @@
       "round": "Group D",
       "group": "D",
       "matchday": 2,
-      "home": "ARG",
-      "away": "CIV",
+      "home": "USA",
+      "away": "AUS",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-18T16:00:00.000Z"
@@ -556,8 +556,8 @@
       "round": "Group D",
       "group": "D",
       "matchday": 2,
-      "home": "PAN",
-      "away": "NOR",
+      "home": "TUR",
+      "away": "PAR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-18T19:00:00.000Z"
@@ -568,8 +568,8 @@
       "round": "Group D",
       "group": "D",
       "matchday": 3,
-      "home": "PAN",
-      "away": "ARG",
+      "home": "TUR",
+      "away": "USA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-25T16:00:00.000Z"
@@ -580,8 +580,8 @@
       "round": "Group D",
       "group": "D",
       "matchday": 3,
-      "home": "NOR",
-      "away": "CIV",
+      "home": "PAR",
+      "away": "AUS",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-25T19:00:00.000Z"
@@ -592,8 +592,8 @@
       "round": "Group E",
       "group": "E",
       "matchday": 1,
-      "home": "FRA",
-      "away": "DEN",
+      "home": "GER",
+      "away": "CUW",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-12T19:00:00.000Z"
@@ -604,8 +604,8 @@
       "round": "Group E",
       "group": "E",
       "matchday": 1,
-      "home": "SEN",
-      "away": "KSA",
+      "home": "CIV",
+      "away": "ECU",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-12T22:00:00.000Z"
@@ -616,8 +616,8 @@
       "round": "Group E",
       "group": "E",
       "matchday": 2,
-      "home": "FRA",
-      "away": "SEN",
+      "home": "GER",
+      "away": "CIV",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-18T19:00:00.000Z"
@@ -628,8 +628,8 @@
       "round": "Group E",
       "group": "E",
       "matchday": 2,
-      "home": "KSA",
-      "away": "DEN",
+      "home": "ECU",
+      "away": "CUW",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-18T22:00:00.000Z"
@@ -640,8 +640,8 @@
       "round": "Group E",
       "group": "E",
       "matchday": 3,
-      "home": "KSA",
-      "away": "FRA",
+      "home": "ECU",
+      "away": "GER",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-25T19:00:00.000Z"
@@ -652,8 +652,8 @@
       "round": "Group E",
       "group": "E",
       "matchday": 3,
-      "home": "DEN",
-      "away": "SEN",
+      "home": "CUW",
+      "away": "CIV",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-25T22:00:00.000Z"
@@ -664,8 +664,8 @@
       "round": "Group F",
       "group": "F",
       "matchday": 1,
-      "home": "BRA",
-      "away": "AUT",
+      "home": "NED",
+      "away": "JPN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-12T22:00:00.000Z"
@@ -676,8 +676,8 @@
       "round": "Group F",
       "group": "F",
       "matchday": 1,
-      "home": "CMR",
-      "away": "CRC",
+      "home": "SWE",
+      "away": "TUN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-12T19:00:00.000Z"
@@ -688,8 +688,8 @@
       "round": "Group F",
       "group": "F",
       "matchday": 2,
-      "home": "BRA",
-      "away": "CMR",
+      "home": "NED",
+      "away": "SWE",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-18T22:00:00.000Z"
@@ -700,8 +700,8 @@
       "round": "Group F",
       "group": "F",
       "matchday": 2,
-      "home": "CRC",
-      "away": "AUT",
+      "home": "TUN",
+      "away": "JPN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-18T19:00:00.000Z"
@@ -712,8 +712,8 @@
       "round": "Group F",
       "group": "F",
       "matchday": 3,
-      "home": "CRC",
-      "away": "BRA",
+      "home": "TUN",
+      "away": "NED",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-25T22:00:00.000Z"
@@ -724,8 +724,8 @@
       "round": "Group F",
       "group": "F",
       "matchday": 3,
-      "home": "AUT",
-      "away": "CMR",
+      "home": "JPN",
+      "away": "SWE",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-25T19:00:00.000Z"
@@ -736,8 +736,8 @@
       "round": "Group G",
       "group": "G",
       "matchday": 1,
-      "home": "ENG",
-      "away": "SRB",
+      "home": "BEL",
+      "away": "EGY",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-13T16:00:00.000Z"
@@ -748,8 +748,8 @@
       "round": "Group G",
       "group": "G",
       "matchday": 1,
-      "home": "ALG",
-      "away": "IRQ",
+      "home": "IRN",
+      "away": "NZL",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-13T19:00:00.000Z"
@@ -760,8 +760,8 @@
       "round": "Group G",
       "group": "G",
       "matchday": 2,
-      "home": "ENG",
-      "away": "ALG",
+      "home": "BEL",
+      "away": "IRN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-19T16:00:00.000Z"
@@ -772,8 +772,8 @@
       "round": "Group G",
       "group": "G",
       "matchday": 2,
-      "home": "IRQ",
-      "away": "SRB",
+      "home": "NZL",
+      "away": "EGY",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-19T19:00:00.000Z"
@@ -784,8 +784,8 @@
       "round": "Group G",
       "group": "G",
       "matchday": 3,
-      "home": "IRQ",
-      "away": "ENG",
+      "home": "NZL",
+      "away": "BEL",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-26T16:00:00.000Z"
@@ -796,8 +796,8 @@
       "round": "Group G",
       "group": "G",
       "matchday": 3,
-      "home": "SRB",
-      "away": "ALG",
+      "home": "EGY",
+      "away": "IRN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-26T19:00:00.000Z"
@@ -809,7 +809,7 @@
       "group": "H",
       "matchday": 1,
       "home": "ESP",
-      "away": "UKR",
+      "away": "CPV",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-13T19:00:00.000Z"
@@ -820,8 +820,8 @@
       "round": "Group H",
       "group": "H",
       "matchday": 1,
-      "home": "TUN",
-      "away": "JAM",
+      "home": "KSA",
+      "away": "URU",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-13T22:00:00.000Z"
@@ -833,7 +833,7 @@
       "group": "H",
       "matchday": 2,
       "home": "ESP",
-      "away": "TUN",
+      "away": "KSA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-19T19:00:00.000Z"
@@ -844,8 +844,8 @@
       "round": "Group H",
       "group": "H",
       "matchday": 2,
-      "home": "JAM",
-      "away": "UKR",
+      "home": "URU",
+      "away": "CPV",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-19T22:00:00.000Z"
@@ -856,7 +856,7 @@
       "round": "Group H",
       "group": "H",
       "matchday": 3,
-      "home": "JAM",
+      "home": "URU",
       "away": "ESP",
       "homeSource": null,
       "awaySource": null,
@@ -868,8 +868,8 @@
       "round": "Group H",
       "group": "H",
       "matchday": 3,
-      "home": "UKR",
-      "away": "TUN",
+      "home": "CPV",
+      "away": "KSA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-26T22:00:00.000Z"
@@ -880,8 +880,8 @@
       "round": "Group I",
       "group": "I",
       "matchday": 1,
-      "home": "POR",
-      "away": "POL",
+      "home": "FRA",
+      "away": "SEN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-13T22:00:00.000Z"
@@ -892,8 +892,8 @@
       "round": "Group I",
       "group": "I",
       "matchday": 1,
-      "home": "KOR",
-      "away": "BOL",
+      "home": "IRQ",
+      "away": "NOR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-13T19:00:00.000Z"
@@ -904,8 +904,8 @@
       "round": "Group I",
       "group": "I",
       "matchday": 2,
-      "home": "POR",
-      "away": "KOR",
+      "home": "FRA",
+      "away": "IRQ",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-19T22:00:00.000Z"
@@ -916,8 +916,8 @@
       "round": "Group I",
       "group": "I",
       "matchday": 2,
-      "home": "BOL",
-      "away": "POL",
+      "home": "NOR",
+      "away": "SEN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-19T19:00:00.000Z"
@@ -928,8 +928,8 @@
       "round": "Group I",
       "group": "I",
       "matchday": 3,
-      "home": "BOL",
-      "away": "POR",
+      "home": "NOR",
+      "away": "FRA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-26T22:00:00.000Z"
@@ -940,8 +940,8 @@
       "round": "Group I",
       "group": "I",
       "matchday": 3,
-      "home": "POL",
-      "away": "KOR",
+      "home": "SEN",
+      "away": "IRQ",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-26T19:00:00.000Z"
@@ -952,8 +952,8 @@
       "round": "Group J",
       "group": "J",
       "matchday": 1,
-      "home": "NED",
-      "away": "ECU",
+      "home": "ARG",
+      "away": "ALG",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-14T16:00:00.000Z"
@@ -964,8 +964,8 @@
       "round": "Group J",
       "group": "J",
       "matchday": 1,
-      "home": "JPN",
-      "away": "COD",
+      "home": "AUT",
+      "away": "JOR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-14T19:00:00.000Z"
@@ -976,8 +976,8 @@
       "round": "Group J",
       "group": "J",
       "matchday": 2,
-      "home": "NED",
-      "away": "JPN",
+      "home": "ARG",
+      "away": "AUT",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-20T16:00:00.000Z"
@@ -988,8 +988,8 @@
       "round": "Group J",
       "group": "J",
       "matchday": 2,
-      "home": "COD",
-      "away": "ECU",
+      "home": "JOR",
+      "away": "ALG",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-20T19:00:00.000Z"
@@ -1000,8 +1000,8 @@
       "round": "Group J",
       "group": "J",
       "matchday": 3,
-      "home": "COD",
-      "away": "NED",
+      "home": "JOR",
+      "away": "ARG",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-27T16:00:00.000Z"
@@ -1012,8 +1012,8 @@
       "round": "Group J",
       "group": "J",
       "matchday": 3,
-      "home": "ECU",
-      "away": "JPN",
+      "home": "ALG",
+      "away": "AUT",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-27T19:00:00.000Z"
@@ -1024,8 +1024,8 @@
       "round": "Group K",
       "group": "K",
       "matchday": 1,
-      "home": "GER",
-      "away": "COL",
+      "home": "POR",
+      "away": "COD",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-14T19:00:00.000Z"
@@ -1036,8 +1036,8 @@
       "round": "Group K",
       "group": "K",
       "matchday": 1,
-      "home": "IRN",
-      "away": "PAR",
+      "home": "UZB",
+      "away": "COL",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-14T22:00:00.000Z"
@@ -1048,8 +1048,8 @@
       "round": "Group K",
       "group": "K",
       "matchday": 2,
-      "home": "GER",
-      "away": "IRN",
+      "home": "POR",
+      "away": "UZB",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-20T19:00:00.000Z"
@@ -1060,8 +1060,8 @@
       "round": "Group K",
       "group": "K",
       "matchday": 2,
-      "home": "PAR",
-      "away": "COL",
+      "home": "COL",
+      "away": "COD",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-20T22:00:00.000Z"
@@ -1072,8 +1072,8 @@
       "round": "Group K",
       "group": "K",
       "matchday": 3,
-      "home": "PAR",
-      "away": "GER",
+      "home": "COL",
+      "away": "POR",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-27T19:00:00.000Z"
@@ -1084,8 +1084,8 @@
       "round": "Group K",
       "group": "K",
       "matchday": 3,
-      "home": "COL",
-      "away": "IRN",
+      "home": "COD",
+      "away": "UZB",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-27T22:00:00.000Z"
@@ -1096,8 +1096,8 @@
       "round": "Group L",
       "group": "L",
       "matchday": 1,
-      "home": "ITA",
-      "away": "URU",
+      "home": "ENG",
+      "away": "CRO",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-14T22:00:00.000Z"
@@ -1108,8 +1108,8 @@
       "round": "Group L",
       "group": "L",
       "matchday": 1,
-      "home": "AUS",
-      "away": "MAR",
+      "home": "GHA",
+      "away": "PAN",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-14T19:00:00.000Z"
@@ -1120,8 +1120,8 @@
       "round": "Group L",
       "group": "L",
       "matchday": 2,
-      "home": "ITA",
-      "away": "AUS",
+      "home": "ENG",
+      "away": "GHA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-20T22:00:00.000Z"
@@ -1132,8 +1132,8 @@
       "round": "Group L",
       "group": "L",
       "matchday": 2,
-      "home": "MAR",
-      "away": "URU",
+      "home": "PAN",
+      "away": "CRO",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-20T19:00:00.000Z"
@@ -1144,8 +1144,8 @@
       "round": "Group L",
       "group": "L",
       "matchday": 3,
-      "home": "MAR",
-      "away": "ITA",
+      "home": "PAN",
+      "away": "ENG",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-27T22:00:00.000Z"
@@ -1156,8 +1156,8 @@
       "round": "Group L",
       "group": "L",
       "matchday": 3,
-      "home": "URU",
-      "away": "AUS",
+      "home": "CRO",
+      "away": "GHA",
       "homeSource": null,
       "awaySource": null,
       "kickoff": "2026-06-27T19:00:00.000Z"
