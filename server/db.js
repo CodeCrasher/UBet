@@ -122,6 +122,13 @@ db.exec(`
     created_at    TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS password_resets (
+    token      TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
   CREATE INDEX IF NOT EXISTS idx_pools_fixture ON pools(fixture_num);
   CREATE INDEX IF NOT EXISTS idx_entries_pool ON entries(pool_id);

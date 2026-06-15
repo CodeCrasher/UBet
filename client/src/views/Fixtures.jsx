@@ -3,6 +3,7 @@ import { fixtures, goFixture } from '../lib/store.js';
 import { fmtKickoff } from '../lib/helpers.js';
 
 const ROUNDS = [
+  { key: 'groups', label: 'Groups', test: null },
   { key: 'md1', label: 'Matchday 1', test: (f) => f.stage === 'group' && f.matchday === 1 },
   { key: 'md2', label: 'Matchday 2', test: (f) => f.stage === 'group' && f.matchday === 2 },
   { key: 'md3', label: 'Matchday 3', test: (f) => f.stage === 'group' && f.matchday === 3 },
@@ -16,18 +17,32 @@ const ROUNDS = [
 
 function defaultKey(list) {
   for (const r of ROUNDS) {
+    if (!r.test) continue;
     const ms = list.filter(r.test);
     if (ms.length && ms.some((f) => f.status !== 'final')) return r.key;
   }
   return 'md1';
 }
 
+function buildGroups(list) {
+  const groups = {};
+  for (const f of list) {
+    if (f.stage !== 'group' || !f.group) continue;
+    if (!groups[f.group]) groups[f.group] = new Map();
+    if (f.homeTeam?.code) groups[f.group].set(f.homeTeam.code, f.homeTeam);
+    if (f.awayTeam?.code) groups[f.group].set(f.awayTeam.code, f.awayTeam);
+  }
+  return Object.entries(groups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([letter, teamsMap]) => ({ letter, teams: [...teamsMap.values()] }));
+}
+
 export function Fixtures() {
   const list = fixtures.value;
   const [round, setRound] = useState(null);
   const activeKey = round || defaultKey(list);
-  const def = ROUNDS.find((r) => r.key === activeKey) || ROUNDS[0];
-  const shown = list.filter(def.test).sort((a, b) => a.kickoff.localeCompare(b.kickoff) || a.num - b.num);
+  const def = ROUNDS.find((r) => r.key === activeKey);
+  const shown = def?.test ? list.filter(def.test).sort((a, b) => a.kickoff.localeCompare(b.kickoff) || a.num - b.num) : [];
 
   return (
     <div>
@@ -37,8 +52,7 @@ export function Fixtures() {
       </div>
       <div class="round-chips">
         {ROUNDS.map((r) => {
-          const ms = list.filter(r.test);
-          if (!ms.length) return null;
+          if (r.test && !list.filter(r.test).length) return null;
           return (
             <button key={r.key} class={`chip ${r.key === activeKey ? 'active' : ''}`} onClick={() => setRound(r.key)}>
               {r.label}
@@ -47,9 +61,33 @@ export function Fixtures() {
         })}
       </div>
 
-      <div class="slates">
-        {shown.map((f) => <Slate key={f.num} f={f} />)}
-      </div>
+      {activeKey === 'groups' ? (
+        <GroupsGrid groups={buildGroups(list)} />
+      ) : (
+        <div class="slates">
+          {shown.map((f) => <Slate key={f.num} f={f} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GroupsGrid({ groups }) {
+  if (!groups.length) return <p class="muted center" style="padding:40px 0">Loading groups…</p>;
+  return (
+    <div class="groups-grid">
+      {groups.map(({ letter, teams }) => (
+        <div key={letter} class="group-card card">
+          <div class="group-card-hd">Group {letter}</div>
+          {teams.map((t) => (
+            <div key={t.code} class="group-team-row">
+              <span class="group-team-flag">{t.flag}</span>
+              <span class="group-team-code">{t.code}</span>
+              <span class="group-team-name">{t.name}</span>
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }

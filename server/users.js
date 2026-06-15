@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import { randomBytes } from 'node:crypto';
 import db from './db.js';
 import { hashPassword, verifyPassword, newToken } from './auth.js';
 import { now, httpError } from './util.js';
@@ -15,8 +16,19 @@ const stmt = {
   insertSession: db.prepare('INSERT INTO sessions (id, user_id, created_at, expires_at) VALUES (@id, @user_id, @created_at, @expires_at)'),
   getSession: db.prepare('SELECT * FROM sessions WHERE id = ?'),
   deleteSession: db.prepare('DELETE FROM sessions WHERE id = ?'),
+  deleteSessionsByUser: db.prepare('DELETE FROM sessions WHERE user_id = ?'),
+  updatePw: db.prepare('UPDATE users SET pw_hash=@pw_hash, pw_salt=@pw_salt WHERE id=@id'),
   insertLedger: db.prepare(`INSERT INTO ledger (id, user_id, fixture_num, pool_id, kind, amount, created_at)
     VALUES (@id, @user_id, @fixture_num, @pool_id, @kind, @amount, @created_at)`),
+};
+
+const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+const rstmt = {
+  insert: db.prepare('INSERT INTO password_resets (token, user_id, expires_at, created_at) VALUES (@token, @user_id, @expires_at, @created_at)'),
+  getByToken: db.prepare('SELECT * FROM password_resets WHERE token = ?'),
+  deleteByToken: db.prepare('DELETE FROM password_resets WHERE token = ?'),
+  deleteByUser: db.prepare('DELETE FROM password_resets WHERE user_id = ?'),
 };
 
 export function publicUser(u) {
@@ -79,6 +91,33 @@ export function userForSession(token) {
 
 export function destroySession(token) {
   if (token) stmt.deleteSession.run(token);
+}
+
+// ── password reset ──
+export function createResetToken(email) {
+  const u = getUserByEmail(email);
+  if (!u) throw httpError(404, 'No account found with that email');
+  const token = randomBytes(32).toString('hex');
+  const ts = now();
+  rstmt.deleteByUser.run(u.id); // invalidate any existing token for this user
+  rstmt.insert.run({ token, user_id: u.id, expires_at: new Date(Date.now() + RESET_TTL_MS).toISOString(), created_at: ts });
+  return token;
+}
+
+export function resetPasswordWithToken(token, newPassword) {
+  if (!newPassword || String(newPassword).length < 6) throw httpError(400, 'Password must be at least 6 characters');
+  const row = rstmt.getByToken.get(String(token || ''));
+  if (!row) throw httpError(400, 'Invalid or expired reset link');
+  if (Date.now() > new Date(row.expires_at).getTime()) {
+    rstmt.deleteByToken.run(token);
+    throw httpError(400, 'Reset link has expired — please request a new one');
+  }
+  const { hash, salt } = hashPassword(newPassword);
+  db.transaction(() => {
+    stmt.updatePw.run({ pw_hash: hash, pw_salt: salt, id: row.user_id });
+    rstmt.deleteByToken.run(token);
+    stmt.deleteSessionsByUser.run(row.user_id); // log out all existing sessions
+  })();
 }
 
 // ── money (caller wraps in a transaction) ──

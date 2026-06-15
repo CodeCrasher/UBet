@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   register, login, publicUser, getUserById,
   createSession, userForSession, destroySession,
+  createResetToken, resetPasswordWithToken,
 } from './users.js';
 import { verifyAdminPin } from './auth.js';
 import { checkLimit, recordFail, recordSuccess } from './ratelimit.js';
@@ -126,6 +127,36 @@ export function createApiRouter(io) {
   r.get('/auth/me', wrap((req, res) => {
     const u = userForSession(req.cookies?.[COOKIE]);
     res.json({ user: u ? publicUser(u) : null });
+  }));
+
+  r.post('/auth/forgot-password', wrap((req, res) => {
+    const key = `forgot:${req.ip}`;
+    const { allowed, retryAfter } = checkLimit(key);
+    if (!allowed) throw httpError(429, `Too many attempts — wait ${retryAfter}s`);
+    const { email } = req.body || {};
+    try {
+      const token = createResetToken(email);
+      recordSuccess(key);
+      res.json({ token });
+    } catch (e) {
+      recordFail(key);
+      throw e;
+    }
+  }));
+
+  r.post('/auth/reset-password', wrap((req, res) => {
+    const key = `reset:${req.ip}`;
+    const { allowed, retryAfter } = checkLimit(key);
+    if (!allowed) throw httpError(429, `Too many attempts — wait ${retryAfter}s`);
+    const { token, password } = req.body || {};
+    try {
+      resetPasswordWithToken(token, password);
+      recordSuccess(key);
+      res.json({ ok: true });
+    } catch (e) {
+      recordFail(key);
+      throw e;
+    }
   }));
 
   // ── fixtures ──

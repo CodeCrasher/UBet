@@ -27,6 +27,7 @@ function parseHash() {
   const [name, ...rest] = h.split('/');
   if (name === 'fixture') return { name: 'fixture', params: { num: Number(rest[0]) } };
   if (name === 'pool') return { name: 'pool', params: { poolId: decodeURIComponent(rest.join('/')) } };
+  if (name === 'reset') return { name: 'reset', params: { token: rest[0] || '' } };
   return { name: 'fixtures', params: {} };
 }
 export function navigate(hash) {
@@ -38,11 +39,12 @@ export const goFixture = (num) => navigate(`#/fixture/${num}`);
 export const goPool = (poolId) => navigate(`#/pool/${encodeURIComponent(poolId)}`);
 
 async function applyRoute() {
+  const r = parseHash();
   if (!me.value) {
-    route.value = { name: 'auth', params: {} };
+    // Allow the reset route through so the password-reset form can render
+    route.value = r.name === 'reset' ? r : { name: 'auth', params: {} };
     return;
   }
-  const r = parseHash();
   route.value = r;
   if (r.name === 'fixtures') loadFixtures();
   else if (r.name === 'fixture') openFixture(r.params.num);
@@ -113,6 +115,15 @@ export async function authSubmit(mode, form) {
   await loadEarnings();
   navigate('#/fixtures');
 }
+export async function forgotPassword(email) {
+  const { token } = await request('/auth/forgot-password', { method: 'POST', body: { email } });
+  return token;
+}
+
+export async function resetPassword(token, password) {
+  await request('/auth/reset-password', { method: 'POST', body: { token, password } });
+}
+
 export async function logout() {
   try { await request('/auth/logout', { method: 'POST' }); } catch { /* ignore */ }
   me.value = null;

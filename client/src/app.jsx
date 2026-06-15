@@ -12,7 +12,10 @@ export function App() {
   const [sheet, setSheet] = useState(null); // 'earnings' | 'admin' | null
 
   if (!ready.value) return null;
-  if (!me.value) return <Auth />;
+  if (!me.value) {
+    const resetToken = route.value?.name === 'reset' ? route.value.params.token : null;
+    return <Auth resetToken={resetToken} />;
+  }
 
   const r = route.value;
   const total = earnings.value.total;

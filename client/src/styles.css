@@ -89,6 +89,12 @@ a { color: var(--pitch); }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field label { font-size: 0.8rem; font-weight: 700; color: var(--ink); }
 .error-banner { background: var(--signal-soft); color: #b32d16; border: 1px solid #f6c5bb; border-radius: var(--r-md); padding: 11px 13px; font-size: 0.9rem; font-weight: 500; margin-bottom: 14px; }
+.success-banner { background: #e6f9ee; color: #0d6634; border: 1px solid #a3ddb9; border-radius: var(--r-md); padding: 11px 13px; font-size: 0.9rem; font-weight: 500; margin-bottom: 14px; }
+.link-btn { background: none; border: none; padding: 0; color: var(--pitch); font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.link-btn:hover { opacity: 0.8; }
+.reset-link-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--line-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; margin-bottom: 4px; }
+.reset-link-text { font-size: 0.85rem; font-weight: 600; color: var(--pitch); text-decoration: none; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reset-link-text:hover { text-decoration: underline; }
 
 /* ---------- status pills ---------- */
 .pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 9px; border-radius: 6px; }
@@ -163,6 +169,16 @@ a { color: var(--pitch); }
 .slate-mid .score .live { color: var(--signal); }
 .slate-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--line-2); font-size: 0.76rem; color: var(--muted); }
 .slate-foot b { font-family: var(--font-display); color: var(--ink); }
+
+/* Groups grid */
+.groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; padding: 4px 0 24px; }
+.group-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--sh-sm); overflow: hidden; }
+.group-card-hd { background: var(--pitch); color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 12px; }
+.group-team-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line-2); }
+.group-team-row:last-child { border-bottom: none; }
+.group-team-flag { font-size: 1.15rem; line-height: 1; width: 1.4rem; text-align: center; flex-shrink: 0; }
+.group-team-code { font-family: var(--font-display); font-weight: 800; font-size: 0.78rem; color: var(--ink); min-width: 2.4rem; }
+.group-team-name { font-size: 0.8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ============================================================
    Fixture detail — betting slips (pool cards)
