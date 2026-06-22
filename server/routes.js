@@ -16,6 +16,7 @@ import {
 } from './pools.js';
 import { teamMap } from './fixtures.js';
 import { confirmResult } from './settlement.js';
+import { syncResults } from './results-sync.js';
 import { setLiveScore } from './liveboard.js';
 import { totalEarnings, breakdown } from './earnings.js';
 import { pushPool, pushFixture, pushFixtureBoards, pushUserEarnings } from './realtime.js';
@@ -247,6 +248,13 @@ export function createApiRouter(io) {
     const count = resyncFixtures();
     resolveKnockouts();
     res.json({ ok: true, message: `Fixtures resynced from latest schedule (${count} fixtures: kickoffs + venues)` });
+  }));
+
+  // Force a results sync now (the poller also runs this on an interval).
+  // Confirms any finished matches from the live feed and settles their pools.
+  r.post('/admin/sync-results', requireAdmin, wrap(async (_req, res) => {
+    const summary = await syncResults(io);
+    res.json({ ok: true, ...summary });
   }));
 
   // Destructive full re-seed: wipe + rebuild fixtures (and pre-seeded pools)

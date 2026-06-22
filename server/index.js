@@ -10,6 +10,7 @@ import { loadFixtures, resolveKnockouts } from './tournament.js';
 import { seedPools } from './pools.js';
 import { attachSockets } from './sockets.js';
 import { createApiRouter } from './routes.js';
+import { startResultsSync } from './results-sync.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = join(__dirname, '..', 'dist');
@@ -67,6 +68,10 @@ app.use((req, _res, next) => {
 app.use(express.json({ limit: '256kb' }));
 app.use('/api', createApiRouter(io));
 attachSockets(io);
+
+// Results ownership: auto-confirm finished matches from the live feed (settling
+// pools) so the schedule stays current without manual admin entry.
+startResultsSync(io);
 
 if (existsSync(DIST)) {
   app.use(express.static(DIST));
