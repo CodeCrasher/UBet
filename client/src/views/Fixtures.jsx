@@ -16,6 +16,14 @@ const ROUNDS = [
 ];
 
 function defaultKey(list) {
+  const now = Date.now();
+  // Prefer rounds with genuinely future kickoffs first
+  for (const r of ROUNDS) {
+    if (!r.test) continue;
+    const ms = list.filter(r.test);
+    if (ms.length && ms.some((f) => f.status !== 'final' && new Date(f.kickoff).getTime() > now)) return r.key;
+  }
+  // Fallback: first round with any unresolved match
   for (const r of ROUNDS) {
     if (!r.test) continue;
     const ms = list.filter(r.test);
@@ -95,11 +103,15 @@ function GroupsGrid({ groups }) {
 function Slate({ f }) {
   const live = f.status === 'live';
   const final = f.status === 'final';
+  const past = !live && !final && Date.now() >= new Date(f.kickoff).getTime();
+  const pillClass = live ? 'live' : final ? 'final' : past ? 'past' : 'upcoming';
   return (
     <button class={`slate ${live ? 'is-live' : ''}`} onClick={() => goFixture(f.num)}>
       <div class="slate-top">
         <span class="slate-meta">{f.group ? `Group ${f.group}` : f.round}</span>
-        <span class={`pill ${f.status}`}>{live ? <><span class="dot" /> Live</> : final ? 'Final' : 'Upcoming'}</span>
+        <span class={`pill ${pillClass}`}>
+          {live ? <><span class="dot" /> Live</> : final ? 'Final' : past ? 'Awaiting result' : 'Upcoming'}
+        </span>
       </div>
       <div class="slate-teams">
         <TeamCell t={f.homeTeam} label={f.homeLabel} />
@@ -115,7 +127,7 @@ function Slate({ f }) {
         <TeamCell t={f.awayTeam} label={f.awayLabel} />
       </div>
       <div class="slate-foot">
-        <span>{final ? 'Full time' : live ? `${f.live.minute}'` : fmtKickoff(f.kickoff)}</span>
+        <span>{final ? 'Full time' : live ? `${f.live.minute}'` : past ? 'Result pending' : fmtKickoff(f.kickoff)}</span>
         <span><b class="num">{f.entrants}</b> in 5 pools</span>
       </div>
     </button>

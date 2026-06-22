@@ -25,7 +25,8 @@ export function FixtureDetail() {
           <Team t={f.awayTeam} label={f.awayLabel} />
         </div>
         <p class="muted center" style="margin-top:12px;font-size:.85rem">
-          {final ? 'Full time' : live ? `Live · ${f.live.minute}'` : fmtKickoff(f.kickoff)} · pools lock at kickoff
+          {final ? 'Full time' : live ? `Live · ${f.live.minute}'` : fmtKickoff(f.kickoff)}
+          {f.venue ? ` · ${f.venue}` : ''} · pools lock at kickoff
         </p>
       </div>
 
