@@ -149,6 +149,12 @@ a { color: var(--pitch); }
 .round-chips::-webkit-scrollbar { display: none; }
 .chip { flex: 0 0 auto; border: 1px solid var(--line); background: var(--card); color: var(--muted); padding: 8px 14px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; white-space: nowrap; }
 .chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.chip-count { margin-left: 6px; font-size: 0.74rem; font-weight: 800; opacity: 0.6; }
+
+/* Quick filter bar (status chips + team picker) */
+.filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 2px 0 8px; }
+.filter-chips { flex: 1 1 240px; min-width: 0; padding: 0 0 4px; }
+.team-select { flex: 0 0 auto; border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 8px 12px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; font-family: inherit; cursor: pointer; max-width: 220px; }
 
 .slates { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 620px) { .slates { grid-template-columns: 1fr 1fr; } }

@@ -15,6 +15,23 @@ const ROUNDS = [
   { key: 'F', label: 'Final', test: (f) => f.stage === 'F' },
 ];
 
+// Cross-cutting one-click filters (by status). null test = everything.
+const QUICK = [
+  { key: 'all', label: 'All', test: null },
+  { key: 'upcoming', label: 'Upcoming', test: (f) => f.status === 'upcoming' },
+  { key: 'live', label: 'Live', test: (f) => f.status === 'live', liveOnly: true },
+  { key: 'completed', label: 'Completed', test: (f) => f.status === 'final' },
+];
+
+// Unique resolved teams across all fixtures, for the team dropdown.
+function allTeams(list) {
+  const m = new Map();
+  for (const f of list) {
+    for (const t of [f.homeTeam, f.awayTeam]) if (t?.code) m.set(t.code, t);
+  }
+  return [...m.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 function defaultKey(list) {
   const now = Date.now();
   // Prefer rounds with genuinely future kickoffs first
@@ -48,6 +65,24 @@ function buildGroups(list) {
 export function Fixtures() {
   const list = fixtures.value;
   const [round, setRound] = useState(null);
+  const [quick, setQuick] = useState('all');
+  const [team, setTeam] = useState('');
+
+  const teams = allTeams(list);
+  const liveCount = list.filter((f) => f.status === 'live').length;
+  const count = (q) => (q.test ? list.filter(q.test).length : list.length);
+
+  // When a status filter or a team is chosen, show a flat cross-stage list.
+  const flatMode = quick !== 'all' || !!team;
+  const quickDef = QUICK.find((q) => q.key === quick) || QUICK[0];
+  const flat = list
+    .filter((f) => (quickDef.test ? quickDef.test(f) : true))
+    .filter((f) => !team || f.homeTeam?.code === team || f.awayTeam?.code === team)
+    .sort((a, b) => (quick === 'completed'
+      ? b.kickoff.localeCompare(a.kickoff) || b.num - a.num
+      : a.kickoff.localeCompare(b.kickoff) || a.num - b.num));
+
+  // Round-tab mode (the default "All" view).
   const activeKey = round || defaultKey(list);
   const def = ROUNDS.find((r) => r.key === activeKey);
   const shown = def?.test ? list.filter(def.test).sort((a, b) => a.kickoff.localeCompare(b.kickoff) || a.num - b.num) : [];
@@ -58,23 +93,48 @@ export function Fixtures() {
         <h1 style="font-size:1.5rem">Fixtures</h1>
         <span class="section-label">World Cup 2026</span>
       </div>
-      <div class="round-chips">
-        {ROUNDS.map((r) => {
-          if (r.test && !list.filter(r.test).length) return null;
-          return (
-            <button key={r.key} class={`chip ${r.key === activeKey ? 'active' : ''}`} onClick={() => setRound(r.key)}>
-              {r.label}
-            </button>
-          );
-        })}
+
+      <div class="filter-bar">
+        <div class="round-chips filter-chips">
+          {QUICK.map((q) => {
+            if (q.liveOnly && liveCount === 0) return null;
+            return (
+              <button key={q.key} class={`chip ${q.key === quick ? 'active' : ''}`} onClick={() => setQuick(q.key)}>
+                {q.label}{q.key !== 'all' ? <span class="chip-count">{count(q)}</span> : null}
+              </button>
+            );
+          })}
+        </div>
+        <select class="team-select" value={team} onChange={(e) => setTeam(e.currentTarget.value)}>
+          <option value="">All teams</option>
+          {teams.map((t) => <option key={t.code} value={t.code}>{t.flag} {t.name}</option>)}
+        </select>
       </div>
 
-      {activeKey === 'groups' ? (
-        <GroupsGrid groups={buildGroups(list)} />
+      {flatMode ? (
+        flat.length ? (
+          <div class="slates">{flat.map((f) => <Slate key={f.num} f={f} />)}</div>
+        ) : (
+          <div class="empty"><div class="em-ic">🔍</div><p>No matches for this filter.</p></div>
+        )
       ) : (
-        <div class="slates">
-          {shown.map((f) => <Slate key={f.num} f={f} />)}
-        </div>
+        <>
+          <div class="round-chips">
+            {ROUNDS.map((r) => {
+              if (r.test && !list.filter(r.test).length) return null;
+              return (
+                <button key={r.key} class={`chip ${r.key === activeKey ? 'active' : ''}`} onClick={() => setRound(r.key)}>
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
+          {activeKey === 'groups' ? (
+            <GroupsGrid groups={buildGroups(list)} />
+          ) : (
+            <div class="slates">{shown.map((f) => <Slate key={f.num} f={f} />)}</div>
+          )}
+        </>
       )}
     </div>
   );
