@@ -1,5 +1,5 @@
 import db from './db.js';
-import { getFixtures } from './fixtures.js';
+import { getFixtures, invalidateFixturesCache } from './fixtures.js';
 import { now } from './util.js';
 import { HOME, AWAY, DRAW } from './settle.js';
 
@@ -9,8 +9,15 @@ const isKnockoutStage = (s) => KO_ORDER.includes(s);
 const stmt = {
   count: db.prepare('SELECT COUNT(*) AS n FROM fixtures'),
   insert: db.prepare(`INSERT INTO fixtures
-    (num, stage, round, group_name, matchday, home, away, home_source, away_source, knockout, kickoff, status, settled, updated_at)
-    VALUES (@num, @stage, @round, @group_name, @matchday, @home, @away, @home_source, @away_source, @knockout, @kickoff, 'upcoming', 0, @updated_at)`),
+    (num, stage, round, group_name, matchday, home, away, home_source, away_source, knockout, kickoff, venue, status, settled, updated_at)
+    VALUES (@num, @stage, @round, @group_name, @matchday, @home, @away, @home_source, @away_source, @knockout, @kickoff, @venue, 'upcoming', 0, @updated_at)`),
+  // Resync: add any genuinely-new fixtures (schema growth), never clobber existing rows.
+  resyncInsert: db.prepare(`INSERT OR IGNORE INTO fixtures
+    (num, stage, round, group_name, matchday, home, away, home_source, away_source, knockout, kickoff, venue, status, settled, updated_at)
+    VALUES (@num, @stage, @round, @group_name, @matchday, @home, @away, @home_source, @away_source, @knockout, @kickoff, @venue, 'upcoming', 0, @updated_at)`),
+  // Resync: refresh schedule fields only — never touch results/scores/status/settled.
+  resyncUpdate: db.prepare(`UPDATE fixtures SET kickoff=@kickoff, venue=@venue, updated_at=@updated_at
+    WHERE num=@num AND status='upcoming' AND settled=0`),
   all: db.prepare('SELECT * FROM fixtures ORDER BY num'),
   byNum: db.prepare('SELECT * FROM fixtures WHERE num = ?'),
   liveByNum: db.prepare('SELECT * FROM live_state WHERE fixture_num = ?'),
@@ -29,12 +36,41 @@ export function loadFixtures() {
       stmt.insert.run({
         num: m.id, stage: m.stage, round: m.round, group_name: m.group ?? null, matchday: m.matchday ?? null,
         home: m.home ?? null, away: m.away ?? null, home_source: m.homeSource ?? null, away_source: m.awaySource ?? null,
-        knockout: isKnockoutStage(m.stage) ? 1 : 0, kickoff: m.kickoff, updated_at: now(),
+        knockout: isKnockoutStage(m.stage) ? 1 : 0, kickoff: m.kickoff, venue: m.venue ?? null, updated_at: now(),
       });
       stmt.insertLive.run(m.id, now());
     }
   });
   tx();
+}
+
+/**
+ * Force-refresh the DB schedule from the committed fixtures.json without
+ * wiping user data. `loadFixtures()` is a one-time seed (it bails when rows
+ * exist), so on an already-seeded volume this is the only way to push a newly
+ * built schedule (real kickoffs + venues) into the DB.
+ *
+ * SAFE: only `kickoff` + `venue` are updated, and only for fixtures still
+ * `upcoming` and unsettled. Scores, status, settlement, pools, entries and
+ * balances are never touched. Brand-new fixtures (none today) are inserted.
+ */
+export function resyncFixtures() {
+  invalidateFixturesCache(); // drop the in-memory snapshot → re-read fixtures.json from disk
+  const fx = getFixtures();
+  const tx = db.transaction(() => {
+    for (const m of fx.matches) {
+      stmt.resyncInsert.run({
+        num: m.id, stage: m.stage, round: m.round, group_name: m.group ?? null, matchday: m.matchday ?? null,
+        home: m.home ?? null, away: m.away ?? null, home_source: m.homeSource ?? null, away_source: m.awaySource ?? null,
+        knockout: isKnockoutStage(m.stage) ? 1 : 0, kickoff: m.kickoff, venue: m.venue ?? null, updated_at: now(),
+      });
+      stmt.insertLive.run(m.id, now());
+      stmt.resyncUpdate.run({ num: m.id, kickoff: m.kickoff, venue: m.venue ?? null, updated_at: now() });
+    }
+  });
+  tx();
+  console.log(`✓ resyncFixtures: refreshed kickoff + venue for ${fx.matches.length} fixtures (results untouched)`);
+  return fx.matches.length;
 }
 
 export const getFixture = (num) => stmt.byNum.get(num);

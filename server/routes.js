@@ -7,7 +7,7 @@ import {
 import { verifyAdminPin } from './auth.js';
 import { checkLimit, recordFail, recordSuccess } from './ratelimit.js';
 import {
-  allFixtures, getFixture, getLive, isLocked, winnerOptions, sourceLabel, resolveKnockouts,
+  allFixtures, getFixture, getLive, isLocked, winnerOptions, sourceLabel, resolveKnockouts, resyncFixtures,
 } from './tournament.js';
 import {
   poolsForFixture, getPool, userEntry, poolStanding, enterPool, effectiveStatus,
@@ -46,7 +46,7 @@ export function createApiRouter(io) {
     const live = getLive(f.num);
     return {
       num: f.num, stage: f.stage, round: f.round, group: f.group_name, matchday: f.matchday,
-      knockout: !!f.knockout, kickoff: f.kickoff, status: f.status,
+      knockout: !!f.knockout, kickoff: f.kickoff, venue: f.venue ?? null, status: f.status,
       homeTeam: teamObj(tmap, f.home), awayTeam: teamObj(tmap, f.away),
       homeLabel: f.home ? (tmap.get(f.home)?.name || f.home) : sourceLabel(f.home_source),
       awayLabel: f.away ? (tmap.get(f.away)?.name || f.away) : sourceLabel(f.away_source),
@@ -237,6 +237,15 @@ export function createApiRouter(io) {
   r.post('/admin/resolve-knockouts', requireAdmin, wrap((_req, res) => {
     resolveKnockouts();
     res.json({ ok: true });
+  }));
+
+  // Break-glass: push the committed schedule (real kickoffs + venues) into the
+  // DB on an already-seeded volume, then re-resolve the bracket. Only refreshes
+  // kickoff/venue for upcoming, unsettled fixtures — never results or user data.
+  r.post('/admin/resync-fixtures', requireAdmin, wrap((_req, res) => {
+    const count = resyncFixtures();
+    resolveKnockouts();
+    res.json({ ok: true, message: `Fixtures resynced from latest schedule (${count} fixtures: kickoffs + venues)` });
   }));
 
   r.use((err, _req, res, _next) => {

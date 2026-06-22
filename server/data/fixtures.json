@@ -6,7 +6,8 @@
     "MEX"
   ],
   "generatedBy": "build-fixtures.mjs",
-  "note": "Official FIFA World Cup 2026 group draw (December 5, 2025). Hosts can edit/lock any fixture in-app.",
+  "source": "https://worldcup26.ir/get",
+  "note": "Live schedule (kickoffs + venues) from https://worldcup26.ir/get; group draw per FIFA (Dec 5, 2025). Hosts can edit/lock any fixture in-app.",
   "teams": [
     {
       "code": "MEX",
@@ -308,7 +309,8 @@
       "away": "RSA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-11T16:00:00.000Z"
+      "kickoff": "2026-06-11T19:00:00.000Z",
+      "venue": "Estadio Azteca"
     },
     {
       "id": 2,
@@ -320,7 +322,8 @@
       "away": "CZE",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-11T19:00:00.000Z"
+      "kickoff": "2026-06-12T02:00:00.000Z",
+      "venue": "Estadio Akron"
     },
     {
       "id": 3,
@@ -332,7 +335,8 @@
       "away": "KOR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-17T16:00:00.000Z"
+      "kickoff": "2026-06-19T01:00:00.000Z",
+      "venue": "Estadio Akron"
     },
     {
       "id": 4,
@@ -344,7 +348,8 @@
       "away": "RSA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-17T19:00:00.000Z"
+      "kickoff": "2026-06-18T16:00:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 5,
@@ -356,7 +361,8 @@
       "away": "MEX",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-24T16:00:00.000Z"
+      "kickoff": "2026-06-25T01:00:00.000Z",
+      "venue": "Estadio Azteca"
     },
     {
       "id": 6,
@@ -368,7 +374,8 @@
       "away": "KOR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-24T19:00:00.000Z"
+      "kickoff": "2026-06-25T01:00:00.000Z",
+      "venue": "Estadio BBVA"
     },
     {
       "id": 7,
@@ -380,7 +387,8 @@
       "away": "BIH",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-11T19:00:00.000Z"
+      "kickoff": "2026-06-12T19:00:00.000Z",
+      "venue": "BMO Field"
     },
     {
       "id": 8,
@@ -392,7 +400,8 @@
       "away": "SUI",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-11T22:00:00.000Z"
+      "kickoff": "2026-06-13T19:00:00.000Z",
+      "venue": "Levi's Stadium"
     },
     {
       "id": 9,
@@ -404,7 +413,8 @@
       "away": "QAT",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-17T19:00:00.000Z"
+      "kickoff": "2026-06-18T22:00:00.000Z",
+      "venue": "BC Place"
     },
     {
       "id": 10,
@@ -416,7 +426,8 @@
       "away": "BIH",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-17T22:00:00.000Z"
+      "kickoff": "2026-06-18T19:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 11,
@@ -428,7 +439,8 @@
       "away": "CAN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-24T19:00:00.000Z"
+      "kickoff": "2026-06-24T19:00:00.000Z",
+      "venue": "BC Place"
     },
     {
       "id": 12,
@@ -440,7 +452,8 @@
       "away": "QAT",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-24T22:00:00.000Z"
+      "kickoff": "2026-06-24T19:00:00.000Z",
+      "venue": "Lumen Field"
     },
     {
       "id": 13,
@@ -452,7 +465,8 @@
       "away": "MAR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-11T22:00:00.000Z"
+      "kickoff": "2026-06-13T22:00:00.000Z",
+      "venue": "MetLife Stadium"
     },
     {
       "id": 14,
@@ -464,7 +478,8 @@
       "away": "SCO",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-11T19:00:00.000Z"
+      "kickoff": "2026-06-14T01:00:00.000Z",
+      "venue": "Gillette Stadium"
     },
     {
       "id": 15,
@@ -476,7 +491,8 @@
       "away": "HAI",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-17T22:00:00.000Z"
+      "kickoff": "2026-06-20T01:00:00.000Z",
+      "venue": "Lincoln Financial Field"
     },
     {
       "id": 16,
@@ -488,7 +504,8 @@
       "away": "MAR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-17T19:00:00.000Z"
+      "kickoff": "2026-06-19T22:00:00.000Z",
+      "venue": "Gillette Stadium"
     },
     {
       "id": 17,
@@ -500,7 +517,8 @@
       "away": "BRA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-24T22:00:00.000Z"
+      "kickoff": "2026-06-24T22:00:00.000Z",
+      "venue": "Hard Rock Stadium"
     },
     {
       "id": 18,
@@ -512,7 +530,8 @@
       "away": "HAI",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-24T19:00:00.000Z"
+      "kickoff": "2026-06-24T22:00:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 19,
@@ -524,7 +543,8 @@
       "away": "PAR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-12T16:00:00.000Z"
+      "kickoff": "2026-06-13T01:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 20,
@@ -536,7 +556,8 @@
       "away": "TUR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-12T19:00:00.000Z"
+      "kickoff": "2026-06-14T04:00:00.000Z",
+      "venue": "BC Place"
     },
     {
       "id": 21,
@@ -548,7 +569,8 @@
       "away": "AUS",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-18T16:00:00.000Z"
+      "kickoff": "2026-06-19T19:00:00.000Z",
+      "venue": "Lumen Field"
     },
     {
       "id": 22,
@@ -560,7 +582,8 @@
       "away": "PAR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-18T19:00:00.000Z"
+      "kickoff": "2026-06-20T03:00:00.000Z",
+      "venue": "Levi's Stadium"
     },
     {
       "id": 23,
@@ -572,7 +595,8 @@
       "away": "USA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-25T16:00:00.000Z"
+      "kickoff": "2026-06-26T02:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 24,
@@ -584,7 +608,8 @@
       "away": "AUS",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-25T19:00:00.000Z"
+      "kickoff": "2026-06-26T02:00:00.000Z",
+      "venue": "Levi's Stadium"
     },
     {
       "id": 25,
@@ -596,7 +621,8 @@
       "away": "CUW",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-12T19:00:00.000Z"
+      "kickoff": "2026-06-14T17:00:00.000Z",
+      "venue": "NRG Stadium"
     },
     {
       "id": 26,
@@ -608,7 +634,8 @@
       "away": "ECU",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-12T22:00:00.000Z"
+      "kickoff": "2026-06-14T23:00:00.000Z",
+      "venue": "Lincoln Financial Field"
     },
     {
       "id": 27,
@@ -620,7 +647,8 @@
       "away": "CIV",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-18T19:00:00.000Z"
+      "kickoff": "2026-06-20T20:00:00.000Z",
+      "venue": "BMO Field"
     },
     {
       "id": 28,
@@ -632,7 +660,8 @@
       "away": "CUW",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-18T22:00:00.000Z"
+      "kickoff": "2026-06-21T00:00:00.000Z",
+      "venue": "GEHA Field at Arrowhead Stadium"
     },
     {
       "id": 29,
@@ -644,7 +673,8 @@
       "away": "GER",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-25T19:00:00.000Z"
+      "kickoff": "2026-06-25T20:00:00.000Z",
+      "venue": "MetLife Stadium"
     },
     {
       "id": 30,
@@ -656,7 +686,8 @@
       "away": "CIV",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-25T22:00:00.000Z"
+      "kickoff": "2026-06-25T20:00:00.000Z",
+      "venue": "Lincoln Financial Field"
     },
     {
       "id": 31,
@@ -668,7 +699,8 @@
       "away": "JPN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-12T22:00:00.000Z"
+      "kickoff": "2026-06-14T20:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 32,
@@ -680,7 +712,8 @@
       "away": "TUN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-12T19:00:00.000Z"
+      "kickoff": "2026-06-15T02:00:00.000Z",
+      "venue": "Estadio BBVA"
     },
     {
       "id": 33,
@@ -692,7 +725,8 @@
       "away": "SWE",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-18T22:00:00.000Z"
+      "kickoff": "2026-06-20T17:00:00.000Z",
+      "venue": "NRG Stadium"
     },
     {
       "id": 34,
@@ -704,7 +738,8 @@
       "away": "JPN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-18T19:00:00.000Z"
+      "kickoff": "2026-06-21T04:00:00.000Z",
+      "venue": "Estadio BBVA"
     },
     {
       "id": 35,
@@ -716,7 +751,8 @@
       "away": "NED",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-25T22:00:00.000Z"
+      "kickoff": "2026-06-25T23:00:00.000Z",
+      "venue": "GEHA Field at Arrowhead Stadium"
     },
     {
       "id": 36,
@@ -728,7 +764,8 @@
       "away": "SWE",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-25T19:00:00.000Z"
+      "kickoff": "2026-06-25T23:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 37,
@@ -740,7 +777,8 @@
       "away": "EGY",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-13T16:00:00.000Z"
+      "kickoff": "2026-06-15T19:00:00.000Z",
+      "venue": "Lumen Field"
     },
     {
       "id": 38,
@@ -752,7 +790,8 @@
       "away": "NZL",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-13T19:00:00.000Z"
+      "kickoff": "2026-06-16T01:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 39,
@@ -764,7 +803,8 @@
       "away": "IRN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-19T16:00:00.000Z"
+      "kickoff": "2026-06-21T19:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 40,
@@ -776,7 +816,8 @@
       "away": "EGY",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-19T19:00:00.000Z"
+      "kickoff": "2026-06-22T01:00:00.000Z",
+      "venue": "BC Place"
     },
     {
       "id": 41,
@@ -788,7 +829,8 @@
       "away": "BEL",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-26T16:00:00.000Z"
+      "kickoff": "2026-06-27T03:00:00.000Z",
+      "venue": "BC Place"
     },
     {
       "id": 42,
@@ -800,7 +842,8 @@
       "away": "IRN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-26T19:00:00.000Z"
+      "kickoff": "2026-06-27T03:00:00.000Z",
+      "venue": "Lumen Field"
     },
     {
       "id": 43,
@@ -812,7 +855,8 @@
       "away": "CPV",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-13T19:00:00.000Z"
+      "kickoff": "2026-06-15T16:00:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 44,
@@ -824,7 +868,8 @@
       "away": "URU",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-13T22:00:00.000Z"
+      "kickoff": "2026-06-15T22:00:00.000Z",
+      "venue": "Hard Rock Stadium"
     },
     {
       "id": 45,
@@ -836,7 +881,8 @@
       "away": "KSA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-19T19:00:00.000Z"
+      "kickoff": "2026-06-21T16:00:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 46,
@@ -848,7 +894,8 @@
       "away": "CPV",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-19T22:00:00.000Z"
+      "kickoff": "2026-06-21T22:00:00.000Z",
+      "venue": "Hard Rock Stadium"
     },
     {
       "id": 47,
@@ -860,7 +907,8 @@
       "away": "ESP",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-26T19:00:00.000Z"
+      "kickoff": "2026-06-27T00:00:00.000Z",
+      "venue": "Estadio Akron"
     },
     {
       "id": 48,
@@ -872,7 +920,8 @@
       "away": "KSA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-26T22:00:00.000Z"
+      "kickoff": "2026-06-27T00:00:00.000Z",
+      "venue": "NRG Stadium"
     },
     {
       "id": 49,
@@ -884,7 +933,8 @@
       "away": "SEN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-13T22:00:00.000Z"
+      "kickoff": "2026-06-16T19:00:00.000Z",
+      "venue": "MetLife Stadium"
     },
     {
       "id": 50,
@@ -896,7 +946,8 @@
       "away": "NOR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-13T19:00:00.000Z"
+      "kickoff": "2026-06-16T22:00:00.000Z",
+      "venue": "Gillette Stadium"
     },
     {
       "id": 51,
@@ -908,7 +959,8 @@
       "away": "IRQ",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-19T22:00:00.000Z"
+      "kickoff": "2026-06-22T21:00:00.000Z",
+      "venue": "Lincoln Financial Field"
     },
     {
       "id": 52,
@@ -920,7 +972,8 @@
       "away": "SEN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-19T19:00:00.000Z"
+      "kickoff": "2026-06-23T00:00:00.000Z",
+      "venue": "MetLife Stadium"
     },
     {
       "id": 53,
@@ -932,7 +985,8 @@
       "away": "FRA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-26T22:00:00.000Z"
+      "kickoff": "2026-06-26T19:00:00.000Z",
+      "venue": "Gillette Stadium"
     },
     {
       "id": 54,
@@ -944,7 +998,8 @@
       "away": "IRQ",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-26T19:00:00.000Z"
+      "kickoff": "2026-06-26T19:00:00.000Z",
+      "venue": "BMO Field"
     },
     {
       "id": 55,
@@ -956,7 +1011,8 @@
       "away": "ALG",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-14T16:00:00.000Z"
+      "kickoff": "2026-06-17T01:00:00.000Z",
+      "venue": "GEHA Field at Arrowhead Stadium"
     },
     {
       "id": 56,
@@ -968,7 +1024,8 @@
       "away": "JOR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-14T19:00:00.000Z"
+      "kickoff": "2026-06-17T04:00:00.000Z",
+      "venue": "Levi's Stadium"
     },
     {
       "id": 57,
@@ -980,7 +1037,8 @@
       "away": "AUT",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-20T16:00:00.000Z"
+      "kickoff": "2026-06-22T17:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 58,
@@ -992,7 +1050,8 @@
       "away": "ALG",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-20T19:00:00.000Z"
+      "kickoff": "2026-06-23T03:00:00.000Z",
+      "venue": "Levi's Stadium"
     },
     {
       "id": 59,
@@ -1004,7 +1063,8 @@
       "away": "ARG",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-27T16:00:00.000Z"
+      "kickoff": "2026-06-28T02:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 60,
@@ -1016,7 +1076,8 @@
       "away": "AUT",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-27T19:00:00.000Z"
+      "kickoff": "2026-06-28T02:00:00.000Z",
+      "venue": "GEHA Field at Arrowhead Stadium"
     },
     {
       "id": 61,
@@ -1028,7 +1089,8 @@
       "away": "COD",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-14T19:00:00.000Z"
+      "kickoff": "2026-06-17T17:00:00.000Z",
+      "venue": "NRG Stadium"
     },
     {
       "id": 62,
@@ -1040,7 +1102,8 @@
       "away": "COL",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-14T22:00:00.000Z"
+      "kickoff": "2026-06-18T02:00:00.000Z",
+      "venue": "Estadio Azteca"
     },
     {
       "id": 63,
@@ -1052,7 +1115,8 @@
       "away": "UZB",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-20T19:00:00.000Z"
+      "kickoff": "2026-06-23T17:00:00.000Z",
+      "venue": "NRG Stadium"
     },
     {
       "id": 64,
@@ -1064,7 +1128,8 @@
       "away": "COD",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-20T22:00:00.000Z"
+      "kickoff": "2026-06-24T02:00:00.000Z",
+      "venue": "Estadio Akron"
     },
     {
       "id": 65,
@@ -1076,7 +1141,8 @@
       "away": "POR",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-27T19:00:00.000Z"
+      "kickoff": "2026-06-27T23:30:00.000Z",
+      "venue": "Hard Rock Stadium"
     },
     {
       "id": 66,
@@ -1088,7 +1154,8 @@
       "away": "UZB",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-27T22:00:00.000Z"
+      "kickoff": "2026-06-27T23:30:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 67,
@@ -1100,7 +1167,8 @@
       "away": "CRO",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-14T22:00:00.000Z"
+      "kickoff": "2026-06-17T20:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 68,
@@ -1112,7 +1180,8 @@
       "away": "PAN",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-14T19:00:00.000Z"
+      "kickoff": "2026-06-17T23:00:00.000Z",
+      "venue": "BMO Field"
     },
     {
       "id": 69,
@@ -1124,7 +1193,8 @@
       "away": "GHA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-20T22:00:00.000Z"
+      "kickoff": "2026-06-23T20:00:00.000Z",
+      "venue": "Gillette Stadium"
     },
     {
       "id": 70,
@@ -1136,7 +1206,8 @@
       "away": "CRO",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-20T19:00:00.000Z"
+      "kickoff": "2026-06-23T23:00:00.000Z",
+      "venue": "BMO Field"
     },
     {
       "id": 71,
@@ -1148,7 +1219,8 @@
       "away": "ENG",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-27T22:00:00.000Z"
+      "kickoff": "2026-06-27T21:00:00.000Z",
+      "venue": "MetLife Stadium"
     },
     {
       "id": 72,
@@ -1160,7 +1232,8 @@
       "away": "GHA",
       "homeSource": null,
       "awaySource": null,
-      "kickoff": "2026-06-27T19:00:00.000Z"
+      "kickoff": "2026-06-27T21:00:00.000Z",
+      "venue": "Lincoln Financial Field"
     },
     {
       "id": 73,
@@ -1172,7 +1245,8 @@
       "away": null,
       "homeSource": "1A",
       "awaySource": "2B",
-      "kickoff": "2026-06-28T16:00:00.000Z"
+      "kickoff": "2026-06-28T19:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 74,
@@ -1180,11 +1254,12 @@
       "round": "Round of 32",
       "group": null,
       "matchday": null,
-      "home": null,
+      "home": "GER",
       "away": null,
       "homeSource": "1C",
       "awaySource": "2D",
-      "kickoff": "2026-06-28T19:00:00.000Z"
+      "kickoff": "2026-06-29T20:30:00.000Z",
+      "venue": "Gillette Stadium"
     },
     {
       "id": 75,
@@ -1196,7 +1271,8 @@
       "away": null,
       "homeSource": "1E",
       "awaySource": "2F",
-      "kickoff": "2026-06-28T22:00:00.000Z"
+      "kickoff": "2026-06-30T01:00:00.000Z",
+      "venue": "Estadio BBVA"
     },
     {
       "id": 76,
@@ -1208,7 +1284,8 @@
       "away": null,
       "homeSource": "1G",
       "awaySource": "2H",
-      "kickoff": "2026-06-28T16:00:00.000Z"
+      "kickoff": "2026-06-29T17:00:00.000Z",
+      "venue": "NRG Stadium"
     },
     {
       "id": 77,
@@ -1220,7 +1297,8 @@
       "away": null,
       "homeSource": "1I",
       "awaySource": "2J",
-      "kickoff": "2026-06-29T19:00:00.000Z"
+      "kickoff": "2026-06-30T21:00:00.000Z",
+      "venue": "MetLife Stadium"
     },
     {
       "id": 78,
@@ -1232,7 +1310,8 @@
       "away": null,
       "homeSource": "1K",
       "awaySource": "2L",
-      "kickoff": "2026-06-29T22:00:00.000Z"
+      "kickoff": "2026-06-30T17:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 79,
@@ -1240,11 +1319,12 @@
       "round": "Round of 32",
       "group": null,
       "matchday": null,
-      "home": null,
+      "home": "MEX",
       "away": null,
       "homeSource": "1B",
       "awaySource": "3-1",
-      "kickoff": "2026-06-29T16:00:00.000Z"
+      "kickoff": "2026-07-01T01:00:00.000Z",
+      "venue": "Estadio Azteca"
     },
     {
       "id": 80,
@@ -1256,7 +1336,8 @@
       "away": null,
       "homeSource": "1D",
       "awaySource": "3-2",
-      "kickoff": "2026-06-29T19:00:00.000Z"
+      "kickoff": "2026-07-01T16:00:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 81,
@@ -1264,11 +1345,12 @@
       "round": "Round of 32",
       "group": null,
       "matchday": null,
-      "home": null,
+      "home": "USA",
       "away": null,
       "homeSource": "1F",
       "awaySource": "3-3",
-      "kickoff": "2026-06-30T22:00:00.000Z"
+      "kickoff": "2026-07-02T00:00:00.000Z",
+      "venue": "Levi's Stadium"
     },
     {
       "id": 82,
@@ -1280,7 +1362,8 @@
       "away": null,
       "homeSource": "1H",
       "awaySource": "3-4",
-      "kickoff": "2026-06-30T16:00:00.000Z"
+      "kickoff": "2026-07-01T20:00:00.000Z",
+      "venue": "Lumen Field"
     },
     {
       "id": 83,
@@ -1292,7 +1375,8 @@
       "away": null,
       "homeSource": "1J",
       "awaySource": "3-5",
-      "kickoff": "2026-06-30T19:00:00.000Z"
+      "kickoff": "2026-07-02T23:00:00.000Z",
+      "venue": "BMO Field"
     },
     {
       "id": 84,
@@ -1304,7 +1388,8 @@
       "away": null,
       "homeSource": "1L",
       "awaySource": "3-6",
-      "kickoff": "2026-06-30T22:00:00.000Z"
+      "kickoff": "2026-07-02T19:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 85,
@@ -1316,7 +1401,8 @@
       "away": null,
       "homeSource": "2A",
       "awaySource": "3-7",
-      "kickoff": "2026-06-31T16:00:00.000Z"
+      "kickoff": "2026-07-03T03:00:00.000Z",
+      "venue": "BC Place"
     },
     {
       "id": 86,
@@ -1328,7 +1414,8 @@
       "away": null,
       "homeSource": "2C",
       "awaySource": "3-8",
-      "kickoff": "2026-06-31T19:00:00.000Z"
+      "kickoff": "2026-07-03T22:00:00.000Z",
+      "venue": "Hard Rock Stadium"
     },
     {
       "id": 87,
@@ -1340,7 +1427,8 @@
       "away": null,
       "homeSource": "2E",
       "awaySource": "2G",
-      "kickoff": "2026-06-31T22:00:00.000Z"
+      "kickoff": "2026-07-04T01:30:00.000Z",
+      "venue": "GEHA Field at Arrowhead Stadium"
     },
     {
       "id": 88,
@@ -1352,7 +1440,8 @@
       "away": null,
       "homeSource": "2I",
       "awaySource": "2K",
-      "kickoff": "2026-06-31T16:00:00.000Z"
+      "kickoff": "2026-07-03T18:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 89,
@@ -1364,7 +1453,8 @@
       "away": null,
       "homeSource": "WM:73",
       "awaySource": "WM:74",
-      "kickoff": "2026-07-03T16:00:00.000Z"
+      "kickoff": "2026-07-04T21:00:00.000Z",
+      "venue": "Lincoln Financial Field"
     },
     {
       "id": 90,
@@ -1376,7 +1466,8 @@
       "away": null,
       "homeSource": "WM:75",
       "awaySource": "WM:76",
-      "kickoff": "2026-07-03T19:00:00.000Z"
+      "kickoff": "2026-07-04T17:00:00.000Z",
+      "venue": "NRG Stadium"
     },
     {
       "id": 91,
@@ -1388,7 +1479,8 @@
       "away": null,
       "homeSource": "WM:77",
       "awaySource": "WM:78",
-      "kickoff": "2026-07-03T22:00:00.000Z"
+      "kickoff": "2026-07-05T20:00:00.000Z",
+      "venue": "MetLife Stadium"
     },
     {
       "id": 92,
@@ -1400,7 +1492,8 @@
       "away": null,
       "homeSource": "WM:79",
       "awaySource": "WM:80",
-      "kickoff": "2026-07-03T16:00:00.000Z"
+      "kickoff": "2026-07-06T00:00:00.000Z",
+      "venue": "Estadio Azteca"
     },
     {
       "id": 93,
@@ -1412,7 +1505,8 @@
       "away": null,
       "homeSource": "WM:81",
       "awaySource": "WM:82",
-      "kickoff": "2026-07-03T19:00:00.000Z"
+      "kickoff": "2026-07-06T19:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 94,
@@ -1424,7 +1518,8 @@
       "away": null,
       "homeSource": "WM:83",
       "awaySource": "WM:84",
-      "kickoff": "2026-07-03T22:00:00.000Z"
+      "kickoff": "2026-07-07T00:00:00.000Z",
+      "venue": "Lumen Field"
     },
     {
       "id": 95,
@@ -1436,7 +1531,8 @@
       "away": null,
       "homeSource": "WM:85",
       "awaySource": "WM:86",
-      "kickoff": "2026-07-03T16:00:00.000Z"
+      "kickoff": "2026-07-07T16:00:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 96,
@@ -1448,7 +1544,8 @@
       "away": null,
       "homeSource": "WM:87",
       "awaySource": "WM:88",
-      "kickoff": "2026-07-03T19:00:00.000Z"
+      "kickoff": "2026-07-07T20:00:00.000Z",
+      "venue": "BC Place"
     },
     {
       "id": 97,
@@ -1460,7 +1557,8 @@
       "away": null,
       "homeSource": "WM:89",
       "awaySource": "WM:90",
-      "kickoff": "2026-07-09T16:00:00.000Z"
+      "kickoff": "2026-07-09T20:00:00.000Z",
+      "venue": "Gillette Stadium"
     },
     {
       "id": 98,
@@ -1472,7 +1570,8 @@
       "away": null,
       "homeSource": "WM:91",
       "awaySource": "WM:92",
-      "kickoff": "2026-07-09T19:00:00.000Z"
+      "kickoff": "2026-07-10T19:00:00.000Z",
+      "venue": "SoFi Stadium"
     },
     {
       "id": 99,
@@ -1484,7 +1583,8 @@
       "away": null,
       "homeSource": "WM:93",
       "awaySource": "WM:94",
-      "kickoff": "2026-07-09T22:00:00.000Z"
+      "kickoff": "2026-07-11T21:00:00.000Z",
+      "venue": "Hard Rock Stadium"
     },
     {
       "id": 100,
@@ -1496,7 +1596,8 @@
       "away": null,
       "homeSource": "WM:95",
       "awaySource": "WM:96",
-      "kickoff": "2026-07-09T16:00:00.000Z"
+      "kickoff": "2026-07-12T01:00:00.000Z",
+      "venue": "GEHA Field at Arrowhead Stadium"
     },
     {
       "id": 101,
@@ -1508,7 +1609,8 @@
       "away": null,
       "homeSource": "WM:97",
       "awaySource": "WM:98",
-      "kickoff": "2026-07-14T16:00:00.000Z"
+      "kickoff": "2026-07-14T19:00:00.000Z",
+      "venue": "AT&T Stadium"
     },
     {
       "id": 102,
@@ -1520,7 +1622,8 @@
       "away": null,
       "homeSource": "WM:99",
       "awaySource": "WM:100",
-      "kickoff": "2026-07-14T19:00:00.000Z"
+      "kickoff": "2026-07-15T19:00:00.000Z",
+      "venue": "Mercedes-Benz Stadium"
     },
     {
       "id": 103,
@@ -1532,7 +1635,8 @@
       "away": null,
       "homeSource": "LM:101",
       "awaySource": "LM:102",
-      "kickoff": "2026-07-18T16:00:00.000Z"
+      "kickoff": "2026-07-18T21:00:00.000Z",
+      "venue": "Hard Rock Stadium"
     },
     {
       "id": 104,
@@ -1544,7 +1648,8 @@
       "away": null,
       "homeSource": "WM:101",
       "awaySource": "WM:102",
-      "kickoff": "2026-07-19T19:00:00.000Z"
+      "kickoff": "2026-07-19T19:00:00.000Z",
+      "venue": "MetLife Stadium"
     }
   ]
 }

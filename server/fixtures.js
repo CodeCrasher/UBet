@@ -16,6 +16,12 @@ export function getFixtures() {
   return fixturesCache;
 }
 
+// Drop the in-memory snapshot so the next getFixtures() re-reads fixtures.json
+// from disk (used by the admin resync to pick up a freshly-built schedule).
+export function invalidateFixturesCache() {
+  fixturesCache = null;
+}
+
 // Data-driven pool definitions (type, fee, mechanic, cap, rake).
 export function getPoolTypes() {
   if (!poolTypesCache) {

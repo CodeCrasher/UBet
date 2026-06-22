@@ -67,6 +67,7 @@ db.exec(`
     away_source   TEXT,
     knockout      INTEGER NOT NULL DEFAULT 0,
     kickoff       TEXT NOT NULL,
+    venue         TEXT,                        -- stadium name (from live schedule)
     home_score    INTEGER,                     -- ET score excl. penalties
     away_score    INTEGER,
     pen_winner    TEXT,                        -- team code if KO decided on pens
@@ -136,6 +137,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_entries_fixture ON entries(fixture_num);
   CREATE INDEX IF NOT EXISTS idx_ledger_user ON ledger(user_id);
 `);
+
+// Additive migration: `venue` on fixtures. Existing Railway volumes predate the
+// column; the CREATE above only adds it to fresh DBs. Try/catch makes this a
+// no-op when the column already exists.
+try {
+  db.prepare('ALTER TABLE fixtures ADD COLUMN venue TEXT').run();
+} catch { /* column already exists */ }
 
 export default db;
 export { DB_PATH };
