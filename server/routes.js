@@ -7,11 +7,12 @@ import {
 import { verifyAdminPin } from './auth.js';
 import { checkLimit, recordFail, recordSuccess } from './ratelimit.js';
 import {
-  allFixtures, getFixture, getLive, isLocked, winnerOptions, sourceLabel, resolveKnockouts, resyncFixtures,
+  allFixtures, getFixture, getLive, isLocked, winnerOptions, sourceLabel,
+  resolveKnockouts, resyncFixtures, reseedFixtures,
 } from './tournament.js';
 import {
   poolsForFixture, getPool, userEntry, poolStanding, enterPool, effectiveStatus,
-  entrantCountsByFixture, entrantCountsForFixture,
+  entrantCountsByFixture, entrantCountsForFixture, seedPools,
 } from './pools.js';
 import { teamMap } from './fixtures.js';
 import { confirmResult } from './settlement.js';
@@ -246,6 +247,16 @@ export function createApiRouter(io) {
     const count = resyncFixtures();
     resolveKnockouts();
     res.json({ ok: true, message: `Fixtures resynced from latest schedule (${count} fixtures: kickoffs + venues)` });
+  }));
+
+  // Destructive full re-seed: wipe + rebuild fixtures (and pre-seeded pools)
+  // from the committed schedule. For volumes seeded from a wrong draw that the
+  // schedule-only resync can't fix. Guarded — refuses (409) if any entries or
+  // settled fixtures exist; never touches users/balances/ledger.
+  r.post('/admin/reseed-fixtures', requireAdmin, wrap((_req, res) => {
+    const count = reseedFixtures();
+    seedPools();
+    res.json({ ok: true, message: `Re-seeded ${count} fixtures + pools from the committed schedule` });
   }));
 
   r.use((err, _req, res, _next) => {

@@ -1,6 +1,6 @@
 import db from './db.js';
 import { getFixtures, invalidateFixturesCache } from './fixtures.js';
-import { now } from './util.js';
+import { now, httpError } from './util.js';
 import { HOME, AWAY, DRAW } from './settle.js';
 
 const KO_ORDER = ['R32', 'R16', 'QF', 'SF', 'TP', 'F'];
@@ -18,6 +18,10 @@ const stmt = {
   // Resync: refresh schedule fields only — never touch results/scores/status/settled.
   resyncUpdate: db.prepare(`UPDATE fixtures SET kickoff=@kickoff, venue=@venue, updated_at=@updated_at
     WHERE num=@num AND status='upcoming' AND settled=0`),
+  // Reseed guards + wipe (used only when there is nothing to lose).
+  countEntries: db.prepare('SELECT COUNT(*) AS n FROM entries'),
+  countSettled: db.prepare("SELECT COUNT(*) AS n FROM fixtures WHERE settled = 1 OR status = 'final'"),
+  deleteAllFixtures: db.prepare('DELETE FROM fixtures'),
   all: db.prepare('SELECT * FROM fixtures ORDER BY num'),
   byNum: db.prepare('SELECT * FROM fixtures WHERE num = ?'),
   liveByNum: db.prepare('SELECT * FROM live_state WHERE fixture_num = ?'),
@@ -70,6 +74,44 @@ export function resyncFixtures() {
   });
   tx();
   console.log(`✓ resyncFixtures: refreshed kickoff + venue for ${fx.matches.length} fixtures (results untouched)`);
+  return fx.matches.length;
+}
+
+/**
+ * Wipe and re-seed the entire fixtures table from the committed schedule. Use
+ * when an existing volume was seeded from a wrong/placeholder draw (stale team
+ * assignments, not just kickoffs) that the schedule-only resync can't fix.
+ *
+ * GUARDED: refuses (409) if any pool entries or settled fixtures exist, so it
+ * can never destroy real betting activity. Deleting fixtures cascades to
+ * live_state and the pre-seeded pools (recreate them with seedPools() after).
+ * Users, balances, sessions and the ledger live in tables not tied to fixtures
+ * and are never touched.
+ */
+export function reseedFixtures() {
+  const entries = stmt.countEntries.get().n;
+  const settled = stmt.countSettled.get().n;
+  if (entries > 0 || settled > 0) {
+    throw httpError(409,
+      `Refusing to re-seed: ${entries} pool entr${entries === 1 ? 'y' : 'ies'} / ${settled} settled fixture(s) exist. `
+      + 'Use POST /admin/resync-fixtures (schedule-only, non-destructive) instead.');
+  }
+  invalidateFixturesCache(); // re-read fixtures.json from disk
+  const fx = getFixtures();
+  const tx = db.transaction(() => {
+    stmt.deleteAllFixtures.run(); // cascades: live_state + pre-seeded pools (entries already 0)
+    for (const m of fx.matches) {
+      stmt.insert.run({
+        num: m.id, stage: m.stage, round: m.round, group_name: m.group ?? null, matchday: m.matchday ?? null,
+        home: m.home ?? null, away: m.away ?? null, home_source: m.homeSource ?? null, away_source: m.awaySource ?? null,
+        knockout: isKnockoutStage(m.stage) ? 1 : 0, kickoff: m.kickoff, venue: m.venue ?? null, updated_at: now(),
+      });
+      stmt.insertLive.run(m.id, now());
+    }
+  });
+  tx();
+  resolveKnockouts();
+  console.log(`✓ reseedFixtures: wiped + re-seeded ${fx.matches.length} fixtures from the committed schedule`);
   return fx.matches.length;
 }
 
